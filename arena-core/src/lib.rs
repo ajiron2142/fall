@@ -273,7 +273,7 @@ impl Game {
                     self.v.y = 0.0;
                     self.grounded = true;
                 } else if self.p.y < b.h && self.p.y + 1.7 > 0.0 {
-                    push_box(&mut self.p, &mut self.v, b, 0.32);
+                    push_box(&mut self.p, &mut self.v, b, 0.32, false);
                 }
             }
         }
@@ -327,7 +327,7 @@ impl Game {
                         body.p.y = b.h + body.r;
                         body.v.y *= -0.55;
                     } else {
-                        push_box(&mut body.p, &mut body.v, b, body.r);
+                        push_box(&mut body.p, &mut body.v, b, body.r, true);
                     }
                 }
             }
@@ -498,17 +498,17 @@ impl Game {
         }
     }
 }
-fn push_box(p: &mut V, v: &mut V, b: Block, r: f32) {
+fn push_box(p: &mut V, v: &mut V, b: Block, r: f32, bounce: bool) {
     let dx = b.w / 2.0 + r - (p.x - b.x).abs();
     let dz = b.d / 2.0 + r - (p.z - b.z).abs();
     if dx < dz {
         let sign = if p.x >= b.x { 1.0 } else { -1.0 };
         p.x = b.x + sign * (b.w / 2.0 + r);
-        v.x *= -0.2;
+        v.x *= if bounce { -0.2 } else { 0.0 };
     } else {
         let sign = if p.z >= b.z { 1.0 } else { -1.0 };
         p.z = b.z + sign * (b.d / 2.0 + r);
-        v.z *= -0.2;
+        v.z *= if bounce { -0.2 } else { 0.0 };
     }
 }
 fn ray_box(origin: V, dir: V, b: Block) -> f32 {
@@ -633,6 +633,18 @@ mod tests {
                 && g.score > 0
         );
         assert_eq!(g.attack(0.0, 0.0, 0), -2);
+    }
+    #[test]
+    fn walking_into_obstacle_stops_without_bouncing() {
+        let mut g = Game::new(1);
+        g.p = V::new(0.0, 0.0, -11.5);
+        run(&mut g, 0.2, 1.0, 0.0);
+        let contact_z = g.p.z;
+        for _ in 0..120 {
+            g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+            assert!((g.p.z - contact_z).abs() < 0.00001);
+            assert_eq!(g.v.z, 0.0);
+        }
     }
     #[test]
     fn jump_preserves_dash_momentum_without_input() {
