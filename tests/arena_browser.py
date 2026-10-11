@@ -16,7 +16,9 @@ try:
   page=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
   errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(base+'/arena.html');page.wait_for_function('window.impactState && impactState().ready && impactState().drawCalls>0')
-  page.locator('#start').tap();page.locator('#fire').tap();page.wait_for_function('impactState().hits>0');assert page.evaluate('impactState().bodies[0].vz')< -15
+  page.locator('#start').tap();
+  initial=page.evaluate('''()=>{const before=impactState().shots;document.getElementById('fire').dispatchEvent(new MouseEvent('click',{detail:0}));return {before,after:impactState().shots,pending:impactState().batPending};}''');assert initial['before']==initial['after'] and initial['pending'],initial
+  page.wait_for_function('impactState().hits>0');assert page.evaluate('impactState().bodies[0].vz')< -15
   page.wait_for_timeout(500)
   page.screenshot(path='/tmp/impact-mobile.png')
   cdp=page.context.new_cdp_session(page);r=page.locator('#stick').bounding_box();x=r['x']+r['width']/2;y=r['y']+r['height']/2
@@ -29,6 +31,10 @@ try:
   page.wait_for_function('(z)=>impactState().player.y>.6 && impactState().player.z<z-.3',arg=before)
   cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[{'x':x,'y':y-30,'id':1}]})
   page.wait_for_function('impactState().grounded')
+  # Reset to a clear runway: the faster running jump can land near an obstacle.
+  cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+  page.locator('#pause').tap();page.locator('#reset').tap();page.locator('#start').tap()
+  cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y-30,'id':1}]})
   dr=page.locator('#dash').bounding_box();dx=dr['x']+dr['width']/2;dy=dr['y']+dr['height']/2
   cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y-30,'id':1},{'x':dx,'y':dy,'id':3}]})
   page.wait_for_function('Math.abs(impactState().player.vz)>20')

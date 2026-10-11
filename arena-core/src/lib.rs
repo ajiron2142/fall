@@ -222,9 +222,21 @@ impl Game {
             (-yaw.cos() * f - yaw.sin() * s) / len,
         );
         if self.dash_time <= 0.0 {
-            let blend = 1.0 - (-(if self.grounded { 10.0 } else { 3.8 }) * pdt).exp();
-            self.v.x += (wish.x * 11.5 - self.v.x) * blend;
-            self.v.z += (wish.z * 11.5 - self.v.z) * blend;
+            if self.grounded {
+                let blend = 1.0 - (-18.0 * pdt).exp();
+                self.v.x += (wish.x * 15.0 - self.v.x) * blend;
+                self.v.z += (wish.z * 15.0 - self.v.z) * blend;
+            } else if wish.length() > 0.01 {
+                // Accelerate along the requested direction without deleting jump momentum.
+                let remaining = (15.0 - self.v.dot(wish)).max(0.0);
+                let acceleration = remaining.min(32.0 * pdt);
+                self.v = self.v.add(wish.scale(acceleration));
+                let horizontal = (self.v.x * self.v.x + self.v.z * self.v.z).sqrt();
+                if horizontal > 32.0 {
+                    self.v.x *= 32.0 / horizontal;
+                    self.v.z *= 32.0 / horizontal;
+                }
+            }
         }
         if self.jump_buffer > 0.0 && self.coyote > 0.0 {
             self.v.y = 10.5;
@@ -238,10 +250,10 @@ impl Game {
             } else {
                 V::new(-yaw.sin(), 0.0, -yaw.cos())
             };
-            self.v.x = dir.x * 26.0;
-            self.v.z = dir.z * 26.0;
+            self.v.x = dir.x * 30.0;
+            self.v.z = dir.z * 30.0;
             self.dash_time = 0.16;
-            self.dash_cd = 0.75;
+            self.dash_cd = 0.55;
         }
         let old_y = self.p.y;
         self.v.y -= 25.0 * pdt;
@@ -401,8 +413,10 @@ impl Game {
                         .iter()
                         .all(|block| ray_box(eye, delta.unit(), *block) > dist - b.r)
                 {
-                    b.v = dir.scale(24.0);
-                    b.v.y = 8.0 + pitch.max(-0.3) * 12.0;
+                    // A driving sideways strike: forward power, modest lift, carried momentum.
+                    let carry = b.v.scale(0.2).add(self.v.scale(0.45));
+                    b.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(32.0).add(carry);
+                    b.v.y = 3.2 + pitch.max(0.0) * 16.0 + self.v.y.max(0.0) * 0.2;
                     b.glow = 1.0;
                     count += 1;
                     self.last_hit = i as i32;
@@ -612,8 +626,29 @@ mod tests {
     fn bat_hits_front_ball_and_launches_it() {
         let mut g = Game::new(1);
         assert_eq!(g.attack(0.0, -0.15, 0), 1);
-        assert!(g.bodies[0].v.z < -20.0 && g.bodies[0].v.y > 3.0 && g.score > 0);
+        assert!(
+            g.bodies[0].v.z < -20.0
+                && g.bodies[0].v.y > 0.0
+                && g.bodies[0].v.y < 4.0
+                && g.score > 0
+        );
         assert_eq!(g.attack(0.0, 0.0, 0), -2);
+    }
+    #[test]
+    fn jump_preserves_dash_momentum_without_input() {
+        let mut g = Game::new(1);
+        g.step(0.01, 1.0, 0.0, 0.0, true, true, false);
+        run(&mut g, 0.25, 0.0, 0.0);
+        assert!(!g.grounded && g.v.z < -29.0);
+    }
+    #[test]
+    fn moving_swing_carries_player_momentum() {
+        let mut still = Game::new(1);
+        let mut moving = Game::new(1);
+        moving.v.z = -15.0;
+        still.attack(0.0, 0.0, 0);
+        moving.attack(0.0, 0.0, 0);
+        assert!(moving.bodies[0].v.z < still.bodies[0].v.z - 6.0);
     }
     #[test]
     fn gun_hits_aimed_target_and_misses_away() {
