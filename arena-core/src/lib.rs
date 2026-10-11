@@ -712,6 +712,10 @@ impl Game {
                 }
             }
         }
+        if self.wall_running && wish.x * self.wall_normal > 0.15 {
+            self.v.x = wish.x * 6.0;
+            self.wall_lock = 0.12;
+        }
         self.wall_running = false;
         if !self.grounded && self.wall_lock == 0.0 && self.wall_time < 3.4 && wish.z.abs() > 0.25 {
             for (index, wall) in BLOCKS.into_iter().enumerate() {
@@ -720,7 +724,9 @@ impl Game {
                 }
                 let normal = if self.p.x >= wall.x { 1.0 } else { -1.0 };
                 let face = wall.x + normal * (wall.w / 2.0 + 0.32);
-                if (self.p.x - face).abs() < 0.75
+                if (self.p.x - face).abs() < 0.20
+                    && wish.x * normal <= 0.15
+                    && self.v.x * normal < 1.5
                     && (self.p.z - wall.z).abs() < wall.d / 2.0
                     && self.p.y > wall.base + 0.3
                     && self.p.y + 1.7 < wall.h
@@ -730,9 +736,17 @@ impl Game {
                     self.used_wall = true;
                     self.wall_normal = normal;
                     self.wall_time += dt;
-                    self.p.x = face;
-                    self.v.x = 0.0;
-                    self.v.z = wish.z.signum() * tuning.speed.max(18.0);
+                    // Contact supports the run without pulling the player onto the wall.
+                    if self.v.x * normal < 0.0 {
+                        self.v.x = 0.0;
+                    }
+                    self.v.z = wish.z.signum()
+                        * self
+                            .v
+                            .z
+                            .abs()
+                            .max(tuning.speed.max(18.0))
+                            .min(tuning.max_air_speed);
                     self.v.y = self.v.y.clamp(-0.2, 0.0);
                     break;
                 }
@@ -1606,6 +1620,23 @@ mod tests {
         }
     }
     #[test]
+    fn wall_running_does_not_pull_from_a_distance_and_releases_when_steering_away() {
+        let mut g = Game::new(1);
+        g.p = V::new(64.75, 6.0, 115.0);
+        g.grounded = false;
+        g.coyote = 0.0;
+        g.v.z = -30.0;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+        assert!(!g.wall_running && g.p.x == 64.75);
+        g.p.x = 65.08;
+        g.v.x = 0.0;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+        assert!(g.wall_running && g.p.x == 65.08 && g.v.z < -29.9);
+        let x = g.p.x;
+        g.step(1.0 / 120.0, 1.0, -1.0, 0.0, false, false, false);
+        assert!(!g.wall_running && g.p.x < x && g.v.x < 0.0);
+    }
+    #[test]
     fn wall_jump_pushes_away_and_wall_run_respects_bullet_time() {
         let mut g = Game::new(1);
         g.p = V::new(65.18, 6.0, 115.0);
@@ -1670,8 +1701,8 @@ mod tests {
             let wall = BLOCKS[48 + segment];
             let face = wall.x - wall.w / 2.0 - 0.32;
             let mut reached = false;
-            for kick_distance in [6.0, 9.0, 12.0, 15.0, 18.0] {
-                for double_delay in [24, 36, 48, 60] {
+            for kick_distance in [3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0] {
+                for double_delay in [12, 24, 36, 48, 60, 72] {
                     let mut g = Game::new(1);
                     g.playground = 6;
                     g.p = V::new(from.x, from.h, from.z);
