@@ -92,241 +92,241 @@ const BLOCKS: [Block; 51] = [
     },
     Block {
         x: -22.00,
-        z: 110.00,
-        w: 7.00,
-        d: 8.00,
+        z: 130.00,
+        w: 8.50,
+        d: 10.00,
         h: 0.80,
         base: 0.35,
     },
     Block {
         x: -20.00,
-        z: 99.00,
-        w: 7.00,
-        d: 8.00,
+        z: 112.00,
+        w: 8.50,
+        d: 10.00,
         h: 2.10,
         base: 1.65,
     },
     Block {
         x: -18.00,
-        z: 88.00,
-        w: 7.00,
-        d: 8.00,
+        z: 94.00,
+        w: 8.50,
+        d: 10.00,
         h: 3.40,
         base: 2.95,
     },
     Block {
         x: -20.00,
-        z: 77.00,
-        w: 7.00,
-        d: 8.00,
+        z: 76.00,
+        w: 8.50,
+        d: 10.00,
         h: 4.70,
         base: 4.25,
     },
     Block {
         x: -22.00,
-        z: 66.00,
-        w: 7.00,
-        d: 8.00,
+        z: 58.00,
+        w: 8.50,
+        d: 10.00,
         h: 6.00,
         base: 5.55,
     },
     Block {
         x: -24.00,
-        z: 55.00,
-        w: 7.00,
-        d: 8.00,
+        z: 40.00,
+        w: 8.50,
+        d: 10.00,
         h: 7.30,
         base: 6.85,
     },
     Block {
         x: -26.00,
-        z: 44.00,
-        w: 7.00,
-        d: 8.00,
+        z: 22.00,
+        w: 8.50,
+        d: 10.00,
         h: 8.60,
         base: 8.15,
     },
     Block {
         x: -24.00,
-        z: 33.00,
-        w: 7.00,
-        d: 8.00,
+        z: 4.00,
+        w: 8.50,
+        d: 10.00,
         h: 9.90,
         base: 9.45,
     },
     Block {
         x: -22.00,
-        z: 22.00,
-        w: 7.00,
-        d: 8.00,
+        z: -14.00,
+        w: 8.50,
+        d: 10.00,
         h: 11.20,
         base: 10.75,
     },
     Block {
         x: -20.00,
-        z: 11.00,
-        w: 7.00,
-        d: 8.00,
+        z: -32.00,
+        w: 8.50,
+        d: 10.00,
         h: 12.50,
         base: 12.05,
     },
     Block {
         x: 3.00,
-        z: 110.00,
-        w: 6.00,
-        d: 7.00,
+        z: 130.00,
+        w: 7.50,
+        d: 9.00,
         h: 0.80,
         base: 0.35,
     },
     Block {
         x: 5.00,
-        z: 97.00,
-        w: 6.00,
-        d: 7.00,
+        z: 109.00,
+        w: 7.50,
+        d: 9.00,
         h: 2.70,
         base: 2.25,
     },
     Block {
         x: 7.00,
-        z: 84.00,
-        w: 6.00,
-        d: 7.00,
+        z: 88.00,
+        w: 7.50,
+        d: 9.00,
         h: 4.60,
         base: 4.15,
     },
     Block {
         x: 5.00,
-        z: 71.00,
-        w: 6.00,
-        d: 7.00,
+        z: 67.00,
+        w: 7.50,
+        d: 9.00,
         h: 6.50,
         base: 6.05,
     },
     Block {
         x: 3.00,
-        z: 58.00,
-        w: 6.00,
-        d: 7.00,
+        z: 46.00,
+        w: 7.50,
+        d: 9.00,
         h: 8.40,
         base: 7.95,
     },
     Block {
         x: 1.00,
-        z: 45.00,
-        w: 6.00,
-        d: 7.00,
+        z: 25.00,
+        w: 7.50,
+        d: 9.00,
         h: 10.30,
         base: 9.85,
     },
     Block {
         x: -1.00,
-        z: 32.00,
-        w: 6.00,
-        d: 7.00,
+        z: 4.00,
+        w: 7.50,
+        d: 9.00,
         h: 12.20,
         base: 11.75,
     },
     Block {
         x: 1.00,
-        z: 19.00,
-        w: 6.00,
-        d: 7.00,
+        z: -17.00,
+        w: 7.50,
+        d: 9.00,
         h: 14.10,
         base: 13.65,
     },
     Block {
         x: 3.00,
-        z: 6.00,
-        w: 6.00,
-        d: 7.00,
+        z: -38.00,
+        w: 7.50,
+        d: 9.00,
         h: 16.00,
         base: 15.55,
     },
     Block {
         x: 5.00,
-        z: -7.00,
-        w: 6.00,
-        d: 7.00,
+        z: -59.00,
+        w: 7.50,
+        d: 9.00,
         h: 17.90,
         base: 17.45,
     },
     Block {
         x: 30.00,
-        z: 110.00,
-        w: 5.50,
-        d: 6.50,
+        z: 130.00,
+        w: 6.50,
+        d: 8.00,
         h: 0.80,
         base: 0.35,
     },
     Block {
         x: 32.00,
-        z: 95.00,
-        w: 5.50,
-        d: 6.50,
+        z: 106.00,
+        w: 6.50,
+        d: 8.00,
         h: 3.30,
         base: 2.85,
     },
     Block {
         x: 34.00,
-        z: 80.00,
-        w: 5.50,
-        d: 6.50,
+        z: 82.00,
+        w: 6.50,
+        d: 8.00,
         h: 5.80,
         base: 5.35,
     },
     Block {
         x: 32.00,
-        z: 65.00,
-        w: 5.50,
-        d: 6.50,
+        z: 58.00,
+        w: 6.50,
+        d: 8.00,
         h: 8.30,
         base: 7.85,
     },
     Block {
         x: 30.00,
-        z: 50.00,
-        w: 5.50,
-        d: 6.50,
+        z: 34.00,
+        w: 6.50,
+        d: 8.00,
         h: 10.80,
         base: 10.35,
     },
     Block {
         x: 28.00,
-        z: 35.00,
-        w: 5.50,
-        d: 6.50,
+        z: 10.00,
+        w: 6.50,
+        d: 8.00,
         h: 13.30,
         base: 12.85,
     },
     Block {
         x: 26.00,
-        z: 20.00,
-        w: 5.50,
-        d: 6.50,
+        z: -14.00,
+        w: 6.50,
+        d: 8.00,
         h: 15.80,
         base: 15.35,
     },
     Block {
         x: 28.00,
-        z: 5.00,
-        w: 5.50,
-        d: 6.50,
+        z: -38.00,
+        w: 6.50,
+        d: 8.00,
         h: 18.30,
         base: 17.85,
     },
     Block {
         x: 30.00,
-        z: -10.00,
-        w: 5.50,
-        d: 6.50,
+        z: -62.00,
+        w: 6.50,
+        d: 8.00,
         h: 20.80,
         base: 20.35,
     },
     Block {
         x: 32.00,
-        z: -25.00,
-        w: 5.50,
-        d: 6.50,
+        z: -86.00,
+        w: 6.50,
+        d: 8.00,
         h: 23.30,
         base: 22.85,
     },
@@ -340,17 +340,17 @@ const BLOCKS: [Block; 51] = [
     },
     Block {
         x: 66.00,
-        z: 114.00,
+        z: 107.50,
         w: 1.00,
-        d: 24.00,
+        d: 37.00,
         h: 14.00,
         base: 0.00,
     },
     Block {
         x: 63.00,
-        z: 99.00,
+        z: 85.00,
         w: 8.00,
-        d: 8.00,
+        d: 12.00,
         h: 5.20,
         base: 4.75,
     },
@@ -364,17 +364,17 @@ const BLOCKS: [Block; 51] = [
     },
     Block {
         x: 66.00,
-        z: 18.00,
+        z: 9.50,
         w: 1.00,
-        d: 36.00,
+        d: 53.00,
         h: 14.00,
         base: 0.00,
     },
     Block {
         x: 63.00,
-        z: -3.00,
+        z: -21.00,
         w: 6.00,
-        d: 8.00,
+        d: 12.00,
         h: 5.20,
         base: 4.75,
     },
@@ -388,73 +388,73 @@ const BLOCKS: [Block; 51] = [
     },
     Block {
         x: 66.00,
-        z: -78.00,
+        z: -88.50,
         w: 1.00,
-        d: 48.00,
+        d: 69.00,
         h: 14.00,
         base: 0.00,
     },
     Block {
         x: 63.00,
-        z: -105.00,
+        z: -127.00,
         w: 4.00,
-        d: 8.00,
+        d: 12.00,
         h: 5.20,
         base: 4.75,
     },
     Block {
-        x: 0.00,
-        z: -55.00,
-        w: 8.00,
-        d: 8.00,
+        x: -70.00,
+        z: 70.00,
+        w: 9.00,
+        d: 10.00,
         h: 5.00,
         base: 4.55,
     },
     Block {
-        x: 0.00,
-        z: -90.00,
-        w: 6.00,
-        d: 7.00,
+        x: -70.00,
+        z: 20.00,
+        w: 7.00,
+        d: 9.00,
         h: 8.00,
         base: 7.55,
     },
     Block {
-        x: 0.00,
-        z: -123.00,
-        w: 5.00,
-        d: 6.00,
+        x: -70.00,
+        z: -30.00,
+        w: 6.00,
+        d: 8.00,
         h: 11.00,
         base: 10.55,
     },
     Block {
-        x: 0.00,
-        z: -148.00,
-        w: 7.00,
-        d: 8.00,
+        x: -70.00,
+        z: -80.00,
+        w: 8.00,
+        d: 10.00,
         h: 14.00,
         base: 13.55,
     },
     Block {
-        x: 4.00,
-        z: -73.00,
+        x: -66.00,
+        z: 45.00,
         w: 1.00,
-        d: 38.00,
+        d: 52.00,
         h: 18.00,
         base: 0.00,
     },
     Block {
-        x: 4.00,
-        z: -106.00,
+        x: -66.00,
+        z: -5.00,
         w: 1.00,
-        d: 34.00,
+        d: 52.00,
         h: 21.00,
         base: 0.00,
     },
     Block {
-        x: 4.00,
-        z: -136.00,
+        x: -66.00,
+        z: -55.00,
         w: 1.00,
-        d: 26.00,
+        d: 52.00,
         h: 24.00,
         base: 0.00,
     },
@@ -483,17 +483,17 @@ struct Movement {
 }
 const MOVEMENT: [Movement; 3] = [
     Movement {
-        speed: 15.0,
+        speed: 24.0,
         ground_accel: 18.0,
         air_accel: 32.0,
         gravity: 25.0,
         jump: 10.5,
         double_jump: 9.8,
         dash: 30.0,
-        max_air_speed: 32.0,
+        max_air_speed: 30.0,
     },
     Movement {
-        speed: 18.0,
+        speed: 28.0,
         ground_accel: 7.0,
         air_accel: 16.0,
         gravity: 30.0,
@@ -503,13 +503,13 @@ const MOVEMENT: [Movement; 3] = [
         max_air_speed: 38.0,
     },
     Movement {
-        speed: 12.0,
+        speed: 20.0,
         ground_accel: 12.0,
         air_accel: 65.0,
         gravity: 15.0,
         jump: 10.8,
         double_jump: 10.0,
-        dash: 26.0,
+        dash: 30.0,
         max_air_speed: 30.0,
     },
 ];
@@ -697,8 +697,19 @@ impl Game {
         if self.dash_time <= 0.0 {
             if self.grounded {
                 let blend = 1.0 - (-tuning.ground_accel * pdt).exp();
-                self.v.x += (wish.x * tuning.speed - self.v.x) * blend;
-                self.v.z += (wish.z * tuning.speed - self.v.z) * blend;
+                let horizontal = (self.v.x * self.v.x + self.v.z * self.v.z).sqrt();
+                let aligned = wish.length() > 0.1
+                    && horizontal > 0.1
+                    && self.v.dot(wish.unit()) / horizontal > 0.75;
+                // Carry earned speed while holding a direction; releasing or
+                // reversing input still brakes with the preset's normal response.
+                let speed = if aligned {
+                    horizontal.min(tuning.dash).max(tuning.speed)
+                } else {
+                    tuning.speed
+                };
+                self.v.x += (wish.x * speed - self.v.x) * blend;
+                self.v.z += (wish.z * speed - self.v.z) * blend;
             } else if wish.length() > 0.01 {
                 // Accelerate along the requested direction without deleting jump momentum.
                 let direction = wish.unit();
@@ -745,7 +756,7 @@ impl Game {
                             .v
                             .z
                             .abs()
-                            .max(tuning.speed.max(18.0))
+                            .max(tuning.speed.max(24.0))
                             .min(tuning.max_air_speed);
                     self.v.y = self.v.y.clamp(-0.2, 0.0);
                     break;
@@ -1412,7 +1423,9 @@ mod tests {
             g.dash_time = 0.1;
             let height = g.p.y;
             g.step(1.0 / 120.0, 0.0, 1.0, 0.0, true, false, true);
-            assert!((g.v.x - 26.0).abs() < 0.01 && g.v.z.abs() < 0.01);
+            assert!(
+                (g.v.x - 26.0_f32.max(MOVEMENT[preset].speed)).abs() < 0.01 && g.v.z.abs() < 0.01
+            );
             assert!(g.v.y > 9.0 && (g.p.y - height).abs() < 0.01);
             assert!(!g.air_jump_available && g.dash_time == 0.0);
             g.step(1.0 / 120.0, 0.0, -1.0, 0.0, true, false, true);
@@ -1645,7 +1658,7 @@ mod tests {
         g.v = V::new(0.0, -2.0, -18.0);
         let z = g.p.z;
         g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, true);
-        assert!(g.wall_running && (g.p.z - z).abs() < 0.02);
+        assert!(g.wall_running && (g.p.z - z).abs() < 0.025);
         g.step(1.0 / 120.0, 1.0, 0.0, 0.0, true, false, true);
         assert!(!g.wall_running && g.v.x < -7.0 && g.v.y > 10.0 && g.air_jump_available);
         g.p.y = 0.0;
@@ -1656,7 +1669,8 @@ mod tests {
     #[test]
     fn tall_jump_tiers_are_reachable_with_snappy_without_wall_running() {
         for group in 0..3 {
-            for preset in 0..1 {
+            for speed in [24.0, 30.0] {
+                let preset = 0;
                 for index in STARTS[group]..STARTS[group] + 9 {
                     let from = BLOCKS[index];
                     let to = BLOCKS[index + 1];
@@ -1667,7 +1681,7 @@ mod tests {
                         g.playground = group;
                         g.movement_preset = preset;
                         g.p = V::new(from.x, from.h, from.z);
-                        g.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(MOVEMENT[preset].speed);
+                        g.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(speed);
                         for frame in 0..480 {
                             g.step(
                                 1.0 / 120.0,
@@ -1701,7 +1715,7 @@ mod tests {
             let wall = BLOCKS[48 + segment];
             let face = wall.x - wall.w / 2.0 - 0.32;
             let mut reached = false;
-            for kick_distance in [3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0] {
+            for kick_distance in [3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0] {
                 for double_delay in [12, 24, 36, 48, 60, 72] {
                     let mut g = Game::new(1);
                     g.playground = 6;
@@ -1774,6 +1788,23 @@ mod tests {
         g.v.z = -18.0;
         g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
         assert!(!g.wall_running);
+    }
+    #[test]
+    fn snappy_runs_at_24_and_carries_30_without_repeated_dashes_or_jumps() {
+        let mut g = Game::new(1);
+        g.p = V::new(-50.0, 0.0, 140.0);
+        run(&mut g, 1.0, 1.0, 0.0);
+        assert!((-g.v.z - 24.0).abs() < 0.01);
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, true, false);
+        run(&mut g, 1.0, 1.0, 0.0);
+        assert!((-g.v.z - 30.0).abs() < 0.01);
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, true, false, false);
+        run(&mut g, 1.2, 1.0, 0.0);
+        assert!(g.grounded && (-g.v.z - 30.0).abs() < 0.01);
+        run(&mut g, 0.5, 0.0, 0.0);
+        assert!(g.v.z.abs() < 0.1);
+        run(&mut g, 1.0, 1.0, 0.0);
+        assert!((-g.v.z - 24.0).abs() < 0.01);
     }
     #[test]
     fn movement_presets_produce_distinct_speed_and_jump_arcs() {

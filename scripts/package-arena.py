@@ -22,7 +22,10 @@ Choose Snappy, Momentum, or Floaty movement in Pause; each restarts the selected
 The shotgun is equipped by default. Course / R restarts at platform 01.
 Air jump with movement input redirects momentum; bullet time gives time to aim.
 Seven playgrounds: three tall jump tiers, three wall-run tiers, one combined Expert.
-Jump routes are tuned for Snappy. Select sections in Pause; R restarts your section.
+Snappy cruises at 24 m/s. Dash once for 30 m/s, then keep moving to carry it.
+No repeated dashes, jump tapping, or held sprint button is needed to keep speed.
+Jump gaps are 18/21/24 metres, wall lanes 40/56/72 metres, mixed gaps 50 metres.
+Jump routes are checked at 24 and 30 m/s. Select sections in Pause; R restarts.
 Move alongside glowing walls while airborne to wall-run; Jump kicks away.
 Wall-only sections need no jumps; only the combined section requires both skills.
 The arena is 160 x 320 metres. Runway starts a clear 280-metre sprint lane.
