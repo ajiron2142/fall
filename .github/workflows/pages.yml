@@ -26,7 +26,7 @@ jobs:
       - name: Prepare static game files
         run: |
           mkdir -p "$RUNNER_TEMP/site"
-          cp index.html lab.html style.css game.js echo.css echo.js manifest.webmanifest "$RUNNER_TEMP/site/"
+          cp index.html afterlight.html lab.html style.css game.js echo.css echo.js worlds.css worlds.mjs puzzles.mjs manifest.webmanifest "$RUNNER_TEMP/site/"
           cp -R vendor "$RUNNER_TEMP/site/"
       - uses: actions/upload-pages-artifact@v3
         with:

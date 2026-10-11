@@ -1,9 +1,13 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#08151d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>AFTERLIGHT · Between two worlds</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="echo.css"></head>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f1eee6"><meta name="apple-mobile-web-app-capable" content="yes"><title>Little Worlds · Three playable ideas</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="worlds.css"></head>
 <body>
-<canvas id="world" aria-label="First person floating ruins game"></canvas>
-<div id="hud"><div class="brand">AFTERLIGHT<span>BETWEEN TWO WORLDS</span></div><div id="anchors">◇ ◇ ◇</div><div class="hud-actions"><button id="fullscreen" aria-label="Toggle fullscreen">⛶</button><button id="menu" aria-label="Pause game">Ⅱ</button></div></div>
-<div id="crosshair">+</div><div id="message" role="status" aria-live="polite"></div><div id="phase-label">01 / TIDE</div>
-<div id="controls"><div id="stick" aria-label="Movement joystick"><div id="thumb"></div><span>MOVE</span></div><div class="actions"><button id="shift">SHIFT<span>other reality</span></button><button id="dash">DASH<span>burst forward</span></button><button id="jump">JUMP<span>hold your nerve</span></button></div></div>
-<div id="overlay"><div class="panel"><div class="eyebrow">A PLAYABLE EXPERIMENT</div><h1>One place.<br>Two realities.</h1><p id="description">A city suspended between tides. Paths exist in one world and disappear in the other. Shift midair. Carry your momentum. Wake three anchors to open the way home.</p><div class="instructions"><strong>PHONE</strong><span>Keep holding MOVE with one thumb; press JUMP with the other.<br>Drag the sky to look. The first three platforms are solid.</span><strong>DESKTOP</strong><span>WASD + mouse · Space jump · Shift dash · E change reality · Esc release mouse</span></div><button id="start">Enter the afterlight ↗</button><div class="links"><button id="new-world">Generate another world</button><a href="lab.html">Earlier experiments</a></div><small id="screen-help">Solo prototype · Tap ⛶ for fullscreen</small></div></div>
-<script type="module" src="echo.js"></script></body></html>
+<header><div class="wordmark">little worlds<span>THREE PLAYABLE IDEAS</span></div><div class="header-actions"><span class="solo">SINGLE PLAYER</span><button id="fullscreen" aria-label="Toggle fullscreen">⛶</button></div></header>
+<nav aria-label="Choose prototype"><button data-game="fold" class="active"><span>01</span> Fold Together</button><button data-game="gravity"><span>02</span> Pocket Gravity</button><button data-game="rooms"><span>03</span> Room Shuffle</button></nav>
+<main>
+<section id="stage" aria-label="Interactive puzzle"><canvas id="scene"></canvas><div class="stage-top"><span id="stage-label">PAPER & POSSIBILITY</span><button id="new">New world ↻</button></div><div id="toast" role="status" aria-live="polite"></div><div id="victory" hidden><div><span>BEAUTIFULLY DONE</span><h2 id="win-title">A little world, solved.</h2><p id="win-detail"></p><button id="again">Play another world ↗</button></div></div></section>
+<section id="dashboard"><div class="game-heading"><div><span id="subtitle"></span><h1 id="title">Fold Together</h1></div><span id="score"></span></div><p id="description"></p><div id="inputs"></div><p id="help"></p><details><summary>How this could become co-op</summary><p id="coop"></p></details></section>
+</main>
+<footer><span>Touch-first · no accounts · all local</span><a href="afterlight.html">Afterlight</a><a href="lab.html">Early sketches</a></footer>
+<script type="module" src="worlds.mjs"></script>
+</body></html>

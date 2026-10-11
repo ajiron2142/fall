@@ -15,7 +15,7 @@ try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('google-chrome'),args=['--no-sandbox','--enable-unsafe-swiftshader'])
   page=browser.new_page(viewport={'width':1000,'height':700});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(BASE);page.wait_for_function('window.afterlightState && afterlightState().drawCalls>0')
+  page.goto(BASE+'/afterlight.html');page.wait_for_function('window.afterlightState && afterlightState().drawCalls>0')
   page.locator('#start').click();page.wait_for_function('afterlightState().grounded')
   page.keyboard.press('Space');page.wait_for_function('afterlightState().player.y>.5');page.wait_for_function('afterlightState().grounded')
   page.keyboard.press('KeyE');assert page.evaluate('afterlightState().phase')==1
@@ -27,7 +27,7 @@ try:
   old=page.evaluate('afterlightState().seed');page.locator('#new-world').click();assert old!=page.evaluate('afterlightState().seed')
   assert not errors,errors
   mobile=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
-  mobile.on('pageerror',lambda e:errors.append(str(e)));mobile.goto(BASE);mobile.wait_for_function('window.afterlightState && afterlightState().drawCalls>0');mobile.locator('#start').tap();mobile.wait_for_function('afterlightState().grounded');mobile.locator('#jump').tap();mobile.wait_for_function('afterlightState().player.y>.5');mobile.locator('#shift').tap();assert mobile.evaluate('afterlightState().phase')==1
+  mobile.on('pageerror',lambda e:errors.append(str(e)));mobile.goto(BASE+'/afterlight.html');mobile.wait_for_function('window.afterlightState && afterlightState().drawCalls>0');mobile.locator('#start').tap();mobile.wait_for_function('afterlightState().grounded');mobile.locator('#jump').tap();mobile.wait_for_function('afterlightState().player.y>.5');mobile.locator('#shift').tap();assert mobile.evaluate('afterlightState().phase')==1
   mobile.screenshot(path='/tmp/afterlight-mobile.png');assert mobile.evaluate('document.documentElement.scrollWidth<=innerWidth');assert not errors,errors
   mobile.wait_for_function('afterlightState().grounded')
   cdp=mobile.context.new_cdp_session(mobile)
@@ -78,7 +78,7 @@ window.testRoutes=()=>{
 };'''
   source=(ROOT / 'echo.js').read_text()
   sim.route('**/echo.js',lambda route:route.fulfill(body=source+hook,content_type='text/javascript'))
-  sim.goto(BASE);sim.wait_for_function('window.testRoutes')
+  sim.goto(BASE+'/afterlight.html');sim.wait_for_function('window.testRoutes')
   count=sim.evaluate('testRoutes()')
   print('Passed desktop and mobile browser controls, rendering, fall recovery, pause and layout; completed',count,'generated worlds through real physics, all anchors and win condition.')
   browser.close()

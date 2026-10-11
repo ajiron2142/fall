@@ -1,29 +1,37 @@
-# Two of Us — game lab
+# Little Worlds
 
-Afterlight is a first-person 3D browser prototype: jump and dash across generated floating ruins, switch between two realities to make paths solid, and awaken three checkpoint anchors to reach the gateway. Desktop: WASD/mouse, Space jump, Shift dash, E change reality. Phone: left joystick, drag to look, action buttons.
+Three single-player, mobile-first browser prototypes with fixed 3D cameras and simple touch controls:
 
-The three earlier prototypes remain at `lab.html`. No build step or backend. Three.js 0.160.1 is vendored with its MIT license; its npm artifact was SHA-512 verified. Rendering uses WebGL. Afterlight is solo, not implemented multiplayer. Physics handles platform landings, not general rigid bodies; the skyline is decorative. Real phone performance still needs hands-on testing.
+- **Fold Together:** flip paper islands, walk their connected gold paths, collect stars, and reach the gateway. Paths and starting folds vary by seed. Folding carries the character with the sheet. Undo and hints are available.
+- **Pocket Gravity:** drag a tilt pad to steer a marble, operate a transfer gate, gather crystals, and brake into the goal cup. Four mirrored maze orientations. Holes rescue the marble without removing collected crystals. Arrow keys tilt; Space brakes.
+- **Room Shuffle:** slide rows of rooms, walk each of two friends through matching doorways, collect two keys, and meet in the garden. Seeded spanning-tree corridors and reversible row scrambling guarantee a solution. Undo and a search-based hint are available.
 
-Hold the joystick with one finger and press Jump with another. Action buttons respond on press, including secondary touch pointers. Jump input is buffered for 200 ms and works for 160 ms after leaving an edge. The first three crossings are straight, always solid, and closer together. Each successful landing saves your position.
+No build step, accounts, runtime CDN, or backend. Three.js 0.160.1 is bundled locally with its MIT license; the npm archive was SHA-512 verified. Earlier experiments remain at `afterlight.html` and `lab.html`.
 
-Tap ⛶ for fullscreen where supported. On iPhones without browser fullscreen support, use Share → Add to Home Screen and launch from the home screen.
+## Run
 
-## Browser regression checks
+From this directory, run `python3 -m http.server 8000`, then open the site in a browser. Tap ⛶ for fullscreen on supported browsers. On iPhone, use Share → Add to Home Screen.
 
-Install Python Playwright (`pip install playwright`, then `playwright install chromium`), and run `python3 tests/browser_smoke.py`. The test starts its own temporary local server. It checks simultaneous joystick and second-finger jumping across the first gap, desktop and mobile actions, fullscreen, fall recovery, and completing 30 generated routes through the actual physics. The deterministic route driver is injected only into the test response; production has no movement shortcuts.
+## Validate
 
-From this directory, run `python3 -m http.server 8000`, then open the site in a browser. Static hosting can serve these files directly.
+`node --test tests/puzzles.test.mjs` checks generated puzzle solutions, folding with an occupied sheet, state immutability, role ownership, room hints, gate collisions, braking, and completing the marble maze through actual physics in every orientation.
 
-## Host on GitHub Pages
+For browser checks, install Python Playwright (`pip install playwright`, then `playwright install chromium`) and run `python3 tests/worlds_browser.py`. It starts its own temporary local server and checks mobile canvas picking, puzzle completion, undo, simultaneous tilt/gate/brake input, fullscreen, landscape layout, and desktop keyboard input. `python3 tests/browser_smoke.py` checks the retained Afterlight prototype. Browser emulation does not establish performance on real phone hardware.
 
-In the GitHub repository, open **Settings → Pages → Build and deployment**, and select **GitHub Actions** as the source. Push the game files and `.github/workflows/pages.yml` to `main`. The workflow publishes the static assets and vendored renderer. Later pushes to `main` deploy updates automatically; you can also run it manually from the Actions tab. The deployment reports the site's URL.
+## Future co-op
 
-GitHub Pages hosts these solo prototypes; it does not provide a multiplayer matchmaking server. Free Pages hosting is available for public repositories; private repository eligibility depends on the GitHub plan.
+`puzzles.mjs` contains DOM-free rules: JSON-serializable seeded state, `applyAction(state, action)`, and fixed-step `gravityStep(state, dt)`. Rendering and input live separately in `worlds.mjs`. No transport or matchmaking is implemented.
 
-- **Signal Room:** a generated four-symbol code, split between operator and clue reader. Peek switches information views in solo mode.
-- **Two Sides:** a generated island maze with a guaranteed route. Solo mode lets you peek at the navigator’s map.
-- **In Sync:** five timing hits with changing targets and a simulated partner.
+Solo mode permits all controls. Creating a state with mode `coop` enforces these role assignments:
 
-These explore mechanics, not actual two-player networking. Evaluate communication puzzles with another person sharing a screen; solo peeking cannot establish whether multiplayer is fun.
+| Game | Player A | Player B |
+| --- | --- | --- |
+| Fold Together | Walk; fold outer sheets | Fold middle sheet |
+| Pocket Gravity | Tilt and brake | Operate transfer gate |
+| Room Shuffle | Coral friend; outer rows | Mint friend; middle row |
 
-Signal Room and Two Sides need only occasional turn messages. In Sync would need latency-aware timing if converted to a real two-player game.
+For online play, a shared host can bind players to roles, validate commands with these rules, and broadcast state snapshots. Fold/room games need only discrete commands; gravity needs a host simulation with input updates and interpolation. Player-specific clue views still need to be designed: the solo prototype currently reveals the whole puzzle, including hints. Role restrictions alone do not establish that co-op is fun.
+
+## Publish
+
+GitHub **Settings → Pages → Source → GitHub Actions**. Push to `main`; `.github/workflows/pages.yml` publishes only the static game assets and vendored renderer. GitHub Pages hosts these solo games, not a future matchmaking service. Free Pages hosting is available for public repositories; private repository eligibility depends on the GitHub plan.
