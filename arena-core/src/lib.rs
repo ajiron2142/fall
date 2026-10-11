@@ -3,6 +3,8 @@
 use std::cell::RefCell;
 
 const COUNT: usize = 10;
+const PELLETS: usize = 72;
+const PELLET_SPEED: f32 = 45.0;
 const STRIDE: usize = 9;
 const HEADER: usize = 16;
 const SNAPSHOT: usize = HEADER + COUNT * STRIDE;
@@ -90,6 +92,15 @@ struct Body {
     kind: u32,
     glow: f32,
     scored: f32,
+    last_shot: u32,
+}
+#[derive(Clone, Copy, Debug, Default)]
+struct Pellet {
+    p: V,
+    dir: V,
+    travel: f32,
+    shot: u32,
+    alive: bool,
 }
 struct Game {
     p: V,
@@ -113,7 +124,8 @@ struct Game {
     slow: bool,
     last_hit: i32,
     last_distance: f32,
-    pellet_distances: [f32; 9],
+    pellets: [Pellet; PELLETS],
+    last_impact_weapon: u32,
 }
 impl Game {
     fn new(seed: u32) -> Self {
@@ -172,7 +184,8 @@ impl Game {
             slow: false,
             last_hit: -1,
             last_distance: 35.0,
-            pellet_distances: [9.0; 9],
+            pellets: [Pellet::default(); PELLETS],
+            last_impact_weapon: 0,
         }
     }
     fn step(
@@ -185,7 +198,7 @@ impl Game {
         dash: bool,
         slow: bool,
     ) {
-        let dt = dt.clamp(0.0, 1.0 / 60.0);
+        let dt = dt.clamp(0.0, 1.0 / 60.0) * if slow { 0.08 } else { 1.0 };
         if !dt.is_finite() || !yaw.is_finite() {
             return;
         }
@@ -211,7 +224,7 @@ impl Game {
         } else {
             (self.jump_buffer - dt).max(0.0)
         };
-        let pdt = dt * if slow { 0.8 } else { 1.0 };
+        let pdt = dt;
         let f = if forward.is_finite() {
             forward.clamp(-1.0, 1.0)
         } else {
@@ -303,7 +316,8 @@ impl Game {
         if self.grounded {
             self.air_jump_available = true;
         }
-        let wdt = dt * if slow { 0.24 } else { 1.0 };
+        let wdt = dt;
+        let previous_bodies = self.bodies.map(|b| b.p);
         for (i, body) in self.bodies.iter_mut().enumerate() {
             body.glow = (body.glow - dt * 2.0).max(0.0);
             body.scored = (body.scored - dt).max(0.0);
@@ -399,9 +413,77 @@ impl Game {
                 }
             }
         }
+        self.step_pellets(dt, previous_bodies);
+    }
+    fn step_pellets(&mut self, dt: f32, previous: [V; COUNT]) {
+        for n in 0..PELLETS {
+            let pellet = self.pellets[n];
+            if !pellet.alive {
+                continue;
+            }
+            let distance = (PELLET_SPEED * dt).min(9.0 - pellet.travel);
+            let motion = pellet.dir.scale(distance);
+            let mut fraction = 1.0_f32;
+            let mut stopped = false;
+            let mut hit = None;
+            for b in BLOCKS {
+                let t = ray_box(pellet.p, pellet.dir, b);
+                if t <= distance {
+                    fraction = fraction.min(t / distance.max(0.000001));
+                    stopped = true;
+                }
+            }
+            if motion.y < 0.0 && pellet.p.y + motion.y <= 0.0 {
+                fraction = fraction.min(-pellet.p.y / motion.y);
+                stopped = true;
+            }
+            for (i, b) in self.bodies.iter().enumerate() {
+                // Sweep relative to the target's movement to prevent tunnelling.
+                let relative = motion.sub(b.p.sub(previous[i]));
+                let oc = pellet.p.sub(previous[i]);
+                let a = relative.dot(relative);
+                let d = oc.dot(relative);
+                let c = oc.dot(oc) - b.r.powi(2);
+                let disc = d * d - a * c;
+                let t = if c <= 0.0 {
+                    0.0
+                } else if a > 0.000001 && disc >= 0.0 {
+                    (-d - disc.sqrt()) / a
+                } else {
+                    2.0
+                };
+                if t >= 0.0 && t < fraction {
+                    fraction = t;
+                    hit = Some(i);
+                    stopped = true;
+                }
+            }
+            self.pellets[n].p = pellet.p.add(motion.scale(fraction));
+            self.pellets[n].travel += distance * fraction;
+            self.pellets[n].alive = !stopped && self.pellets[n].travel < 9.0;
+            if let Some(i) = hit {
+                let strength = 5.0 * (0.2 + 0.8 * (1.0 - self.pellets[n].travel / 9.0));
+                let b = &mut self.bodies[i];
+                b.v = b.v.add(pellet.dir.scale(strength));
+                b.glow = 1.0;
+                let new_hit = b.last_shot != pellet.shot;
+                if new_hit {
+                    b.v.y += 1.2;
+                    b.last_shot = pellet.shot;
+                }
+                self.last_hit = i as i32;
+                self.last_impact_weapon = 1;
+                if new_hit {
+                    self.reward(1, 16);
+                }
+            }
+        }
     }
     fn attack(&mut self, yaw: f32, pitch: f32, weapon: u32) -> i32 {
         if self.attack_cd > 0.0 || !yaw.is_finite() || !pitch.is_finite() {
+            return -2;
+        }
+        if weapon == 1 && self.pellets.iter().filter(|p| !p.alive).count() < 9 {
             return -2;
         }
         self.attack_cd = if weapon == 0 { 0.32 } else { 0.58 };
@@ -432,6 +514,7 @@ impl Game {
                     b.glow = 1.0;
                     count += 1;
                     self.last_hit = i as i32;
+                    self.last_impact_weapon = 0;
                     self.last_distance = dist;
                 }
             }
@@ -440,65 +523,33 @@ impl Game {
             }
             return count as i32;
         }
-        // Nine deterministic pellets, each stopped by the nearest solid surface.
-        // Spread and falloff reward closing the distance rather than sniping.
+        // Fire travelling pellets. Hits are resolved against moving targets in step().
         let right = V::new(yaw.cos(), 0.0, -yaw.sin());
         let up = V::new(
             yaw.sin() * pitch.sin(),
             pitch.cos(),
             yaw.cos() * pitch.sin(),
         );
-        let mut impulses = [V::default(); COUNT];
-        let mut pellet_hits = [0u32; COUNT];
-        self.last_distance = 9.0;
-        for pellet in 0..9 {
-            let ray = if pellet == 0 {
+        let mut index = 0;
+        for pellet in self.pellets.iter_mut().filter(|p| !p.alive).take(9) {
+            let ray = if index == 0 {
                 dir
             } else {
-                let angle = (pellet - 1) as f32 * std::f32::consts::TAU / 8.0;
+                let angle = (index - 1) as f32 * std::f32::consts::TAU / 8.0;
                 dir.add(right.scale(angle.cos() * 0.12))
                     .add(up.scale(angle.sin() * 0.12))
                     .unit()
             };
-            let mut nearest = BLOCKS
-                .iter()
-                .map(|b| ray_box(eye, ray, *b))
-                .fold(9.0, f32::min);
-            let mut hit = None;
-            for (i, b) in self.bodies.iter().enumerate() {
-                let oc = eye.sub(b.p);
-                let d = oc.dot(ray);
-                let disc = d * d - (oc.dot(oc) - b.r.powi(2));
-                if disc >= 0.0 {
-                    let t = -d - disc.sqrt();
-                    if t >= 0.0 && t < nearest {
-                        nearest = t;
-                        hit = Some(i);
-                    }
-                }
-            }
-            self.pellet_distances[pellet] = nearest;
-            self.last_distance = self.last_distance.min(nearest);
-            if let Some(i) = hit {
-                let strength = 5.0 * (0.2 + 0.8 * (1.0 - nearest / 9.0));
-                impulses[i] = impulses[i].add(ray.scale(strength));
-                pellet_hits[i] += 1;
-            }
+            *pellet = Pellet {
+                p: eye,
+                dir: ray,
+                travel: 0.0,
+                shot: self.shots,
+                alive: true,
+            };
+            index += 1;
         }
-        let mut count = 0;
-        for (i, b) in self.bodies.iter_mut().enumerate() {
-            if pellet_hits[i] > 0 {
-                b.v = b.v.add(impulses[i]);
-                b.v.y += 1.2;
-                b.glow = 1.0;
-                count += 1;
-                self.last_hit = i as i32;
-            }
-        }
-        if count > 0 {
-            self.reward(count, 16);
-        }
-        count as i32
+        0
     }
     fn reward(&mut self, count: u32, base: u32) {
         self.hits += count;
@@ -627,14 +678,32 @@ pub extern "C" fn last_distance() -> f32 {
     GAME.with(|g| g.borrow().last_distance)
 }
 #[no_mangle]
-pub extern "C" fn pellet_distance(index: usize) -> f32 {
+pub extern "C" fn projectile_count() -> usize {
+    PELLETS
+}
+#[no_mangle]
+pub extern "C" fn projectile(index: usize, field: usize) -> f32 {
     GAME.with(|g| {
         g.borrow()
-            .pellet_distances
+            .pellets
             .get(index)
-            .copied()
-            .unwrap_or(9.0)
+            .map(|p| match field {
+                0 => p.alive as u32 as f32,
+                1 => p.p.x,
+                2 => p.p.y,
+                3 => p.p.z,
+                4 => p.dir.x,
+                5 => p.dir.y,
+                6 => p.dir.z,
+                7 => p.travel,
+                _ => 0.0,
+            })
+            .unwrap_or(0.0)
     })
+}
+#[no_mangle]
+pub extern "C" fn last_impact_weapon() -> u32 {
+    GAME.with(|g| g.borrow().last_impact_weapon)
 }
 #[no_mangle]
 pub extern "C" fn air_jump_available() -> u32 {
@@ -754,7 +823,10 @@ mod tests {
         let mut g = Game::new(1);
         let delta = g.bodies[0].p.sub(g.p.add(V::new(0.0, 1.65, 0.0)));
         let pitch = (delta.y / delta.length()).asin();
-        assert_eq!(g.attack(0.0, pitch, 1), 1);
+        assert_eq!(g.attack(0.0, pitch, 1), 0);
+        assert_eq!(g.hits, 0);
+        run(&mut g, 0.12, 0.0, 0.0);
+        assert_eq!(g.hits, 1);
         run(&mut g, 0.6, 0.0, 0.0);
         assert_eq!(g.attack(std::f32::consts::PI, 0.0, 1), 0);
     }
@@ -763,7 +835,9 @@ mod tests {
         let mut close = Game::new(1);
         let delta = close.bodies[0].p.sub(close.p.add(V::new(0.0, 1.65, 0.0)));
         let pitch = (delta.y / delta.length()).asin();
-        assert_eq!(close.attack(0.0, pitch, 1), 1);
+        assert_eq!(close.attack(0.0, pitch, 1), 0);
+        run(&mut close, 0.08, 0.0, 0.0);
+        assert_eq!(close.hits, 1);
         assert!(close.bodies[0].v.z < -25.0);
         assert_eq!(close.attack(0.0, pitch, 1), -2);
         let mut far = Game::new(1);
@@ -772,7 +846,10 @@ mod tests {
         }
         far.bodies[0].p = V::new(0.0, 1.65, -0.0); // Ten metres from the player.
         assert_eq!(far.attack(0.0, 0.0, 1), 0);
-        assert_eq!(far.bodies[0].v.length(), 0.0);
+        run(&mut far, 0.3, 0.0, 0.0);
+        assert_eq!(far.hits, 0);
+        assert_eq!(far.bodies[0].v.x, 0.0);
+        assert_eq!(far.bodies[0].v.z, 0.0);
     }
     #[test]
     fn shotgun_spread_hits_multiple_targets_and_falls_off() {
@@ -782,7 +859,9 @@ mod tests {
         }
         g.bodies[0].p = V::new(-0.7, 1.65, 4.0);
         g.bodies[1].p = V::new(0.7, 1.65, 4.0);
-        assert_eq!(g.attack(0.0, 0.0, 1), 2);
+        assert_eq!(g.attack(0.0, 0.0, 1), 0);
+        run(&mut g, 0.15, 0.0, 0.0);
+        assert_eq!(g.hits, 2);
         assert!(g.bodies[0].v.z < 0.0 && g.bodies[1].v.z < 0.0);
         assert!(g.bodies[0].v.z.abs() < 20.0);
     }
@@ -795,6 +874,8 @@ mod tests {
         }
         g.bodies[0].p = V::new(6.0, 1.65, -8.0);
         assert_eq!(g.attack(0.0, 0.0, 1), 0);
+        run(&mut g, 0.3, 0.0, 0.0);
+        assert_eq!(g.hits, 0);
     }
     #[test]
     fn slow_motion_reduces_object_travel() {
@@ -807,6 +888,48 @@ mod tests {
             slow.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, true);
         }
         assert!(normal.bodies[0].p.x > slow.bodies[0].p.x * 2.0);
+    }
+    #[test]
+    fn bullet_time_delays_hits_and_resume_releases_pellets() {
+        let mut g = Game::new(1);
+        let delta = g.bodies[0].p.sub(g.p.add(V::new(0.0, 1.65, 0.0)));
+        let pitch = (delta.y / delta.length()).asin();
+        g.attack(0.0, pitch, 1);
+        for _ in 0..36 {
+            g.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, true);
+        }
+        assert_eq!(g.hits, 0);
+        assert!(g.pellets.iter().any(|p| p.alive));
+        assert_eq!(g.bodies[0].v.z, 0.0);
+        run(&mut g, 0.06, 0.0, 0.0);
+        assert_eq!(g.hits, 1);
+        assert!(g.bodies[0].v.z < -20.0);
+    }
+    #[test]
+    fn bullet_time_slows_air_motion_and_cooldowns_then_restores_them() {
+        let mut normal = Game::new(1);
+        let mut slow = Game::new(1);
+        normal.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        slow.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        normal.attack(0.0, 0.0, 1);
+        slow.attack(0.0, 0.0, 1);
+        for _ in 0..120 {
+            normal.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
+            slow.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, true);
+        }
+        assert!(normal.grounded && !slow.grounded && slow.v.y > 8.0);
+        assert!(slow.attack_cd > 0.49 && normal.attack_cd == 0.0);
+        let before = slow.v.y;
+        slow.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
+        assert!((slow.v.y - (before - 25.0 / 120.0)).abs() < 0.00001);
+    }
+    #[test]
+    fn travelling_pellets_can_miss_a_target_that_moves_away() {
+        let mut g = Game::new(1);
+        g.attack(0.0, -0.35, 1);
+        g.bodies[0].p.x = 8.0;
+        run(&mut g, 0.25, 0.0, 0.0);
+        assert_eq!(g.hits, 0);
     }
     #[test]
     fn hoop_awards_points_when_ball_crosses_ring() {

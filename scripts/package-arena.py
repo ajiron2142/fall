@@ -14,11 +14,11 @@ This is a browser build, not a native desktop executable.
 Do not open arena.html through file://; browsers restrict WASM loading that way.
 Everything runs locally. No account, backend, or runtime CDN is required.
 
-WASD + mouse, click to attack, Space jump/double jump, Shift dash, mouse wheel weapon, E slow motion.
+WASD + mouse, click to attack, Space jump/double jump, Shift dash, mouse wheel weapon, E bullet time.
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
 
-The Rust core handles movement, collisions, bat impulses, hitscan attacks,
+The Rust core handles movement, collisions, bat impulses, travelling shotgun pellets,
 object simulation, slow motion, and scoring. Three.js handles rendering;
 browser JavaScript handles input, sound, and presentation. This is a small
 prototype, not a complete Rust game engine or a multiplayer FPS.
