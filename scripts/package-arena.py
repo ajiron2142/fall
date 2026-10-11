@@ -2,7 +2,7 @@
 from pathlib import Path
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 root=Path(__file__).resolve().parents[1]
-files=['index.html','arena.html','afterlight.html','lab.html','style.css','game.js','echo.css','echo.js','worlds.css','worlds.mjs','puzzles.mjs','manifest.webmanifest','arena/style.css','arena/game.mjs','arena/core.wasm','vendor/three.module.js','vendor/THREE-LICENSE.txt','arena-core/Cargo.toml','arena-core/Cargo.lock','arena-core/src/lib.rs']
+files=['bat-preview.html','arena/bat-preview.css','arena/bat-preview.mjs','index.html','arena.html','afterlight.html','lab.html','style.css','game.js','echo.css','echo.js','worlds.css','worlds.mjs','puzzles.mjs','manifest.webmanifest','arena/style.css','arena/game.mjs','arena/core.wasm','vendor/three.module.js','vendor/THREE-LICENSE.txt','arena-core/Cargo.toml','arena-core/Cargo.lock','arena-core/src/lib.rs']
 instructions='''IMPACT — browser movement and weapon demo
 
 This is a browser build, not a native desktop executable.
