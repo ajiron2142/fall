@@ -14,7 +14,7 @@ This is a browser build, not a native desktop executable.
 Do not open arena.html through file://; browsers restrict WASM loading that way.
 Everything runs locally. No account, backend, or runtime CDN is required.
 
-WASD + mouse, click to attack, Space jump, Shift dash, Q weapon, E slow motion.
+WASD + mouse, click to attack, Space jump/double jump, Shift dash, mouse wheel weapon, E slow motion.
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
 

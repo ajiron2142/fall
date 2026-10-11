@@ -113,6 +113,7 @@ struct Game {
     slow: bool,
     last_hit: i32,
     last_distance: f32,
+    pellet_distances: [f32; 9],
 }
 impl Game {
     fn new(seed: u32) -> Self {
@@ -171,6 +172,7 @@ impl Game {
             slow: false,
             last_hit: -1,
             last_distance: 35.0,
+            pellet_distances: [9.0; 9],
         }
     }
     fn step(
@@ -402,7 +404,7 @@ impl Game {
         if self.attack_cd > 0.0 || !yaw.is_finite() || !pitch.is_finite() {
             return -2;
         }
-        self.attack_cd = if weapon == 0 { 0.32 } else { 0.13 };
+        self.attack_cd = if weapon == 0 { 0.32 } else { 0.58 };
         self.shots += 1;
         self.last_hit = -1;
         self.last_distance = 35.0;
@@ -412,10 +414,6 @@ impl Game {
             pitch.sin(),
             -yaw.cos() * pitch.cos(),
         );
-        let wall_distance = BLOCKS
-            .iter()
-            .map(|b| ray_box(eye, dir, *b))
-            .fold(35.0, f32::min);
         if weapon == 0 {
             let mut count = 0;
             for (i, b) in self.bodies.iter_mut().enumerate() {
@@ -442,33 +440,65 @@ impl Game {
             }
             return count as i32;
         }
-        let mut nearest = wall_distance;
-        let mut hit = None;
-        for (i, b) in self.bodies.iter().enumerate() {
-            let oc = eye.sub(b.p);
-            let d = oc.dot(dir);
-            let c = oc.dot(oc) - (b.r + 0.12).powi(2);
-            let disc = d * d - c;
-            if disc >= 0.0 {
-                let t = -d - disc.sqrt();
-                if t >= 0.0 && t < nearest {
-                    nearest = t;
-                    hit = Some(i);
+        // Nine deterministic pellets, each stopped by the nearest solid surface.
+        // Spread and falloff reward closing the distance rather than sniping.
+        let right = V::new(yaw.cos(), 0.0, -yaw.sin());
+        let up = V::new(
+            yaw.sin() * pitch.sin(),
+            pitch.cos(),
+            yaw.cos() * pitch.sin(),
+        );
+        let mut impulses = [V::default(); COUNT];
+        let mut pellet_hits = [0u32; COUNT];
+        self.last_distance = 9.0;
+        for pellet in 0..9 {
+            let ray = if pellet == 0 {
+                dir
+            } else {
+                let angle = (pellet - 1) as f32 * std::f32::consts::TAU / 8.0;
+                dir.add(right.scale(angle.cos() * 0.12))
+                    .add(up.scale(angle.sin() * 0.12))
+                    .unit()
+            };
+            let mut nearest = BLOCKS
+                .iter()
+                .map(|b| ray_box(eye, ray, *b))
+                .fold(9.0, f32::min);
+            let mut hit = None;
+            for (i, b) in self.bodies.iter().enumerate() {
+                let oc = eye.sub(b.p);
+                let d = oc.dot(ray);
+                let disc = d * d - (oc.dot(oc) - b.r.powi(2));
+                if disc >= 0.0 {
+                    let t = -d - disc.sqrt();
+                    if t >= 0.0 && t < nearest {
+                        nearest = t;
+                        hit = Some(i);
+                    }
                 }
             }
+            self.pellet_distances[pellet] = nearest;
+            self.last_distance = self.last_distance.min(nearest);
+            if let Some(i) = hit {
+                let strength = 5.0 * (0.2 + 0.8 * (1.0 - nearest / 9.0));
+                impulses[i] = impulses[i].add(ray.scale(strength));
+                pellet_hits[i] += 1;
+            }
         }
-        self.last_distance = nearest;
-        if let Some(i) = hit {
-            let b = &mut self.bodies[i];
-            b.v = b.v.add(dir.scale(10.0));
-            b.v.y += 2.5;
-            b.glow = 1.0;
-            self.last_hit = i as i32;
-            self.reward(1, 6);
-            1
-        } else {
-            0
+        let mut count = 0;
+        for (i, b) in self.bodies.iter_mut().enumerate() {
+            if pellet_hits[i] > 0 {
+                b.v = b.v.add(impulses[i]);
+                b.v.y += 1.2;
+                b.glow = 1.0;
+                count += 1;
+                self.last_hit = i as i32;
+            }
         }
+        if count > 0 {
+            self.reward(count, 16);
+        }
+        count as i32
     }
     fn reward(&mut self, count: u32, base: u32) {
         self.hits += count;
@@ -597,6 +627,16 @@ pub extern "C" fn last_distance() -> f32 {
     GAME.with(|g| g.borrow().last_distance)
 }
 #[no_mangle]
+pub extern "C" fn pellet_distance(index: usize) -> f32 {
+    GAME.with(|g| {
+        g.borrow()
+            .pellet_distances
+            .get(index)
+            .copied()
+            .unwrap_or(9.0)
+    })
+}
+#[no_mangle]
 pub extern "C" fn air_jump_available() -> u32 {
     GAME.with(|g| g.borrow().air_jump_available as u32)
 }
@@ -710,13 +750,41 @@ mod tests {
         assert!(moving.bodies[0].v.z < still.bodies[0].v.z - 6.0);
     }
     #[test]
-    fn gun_hits_aimed_target_and_misses_away() {
+    fn shotgun_hits_aimed_target_and_misses_away() {
         let mut g = Game::new(1);
         let delta = g.bodies[0].p.sub(g.p.add(V::new(0.0, 1.65, 0.0)));
         let pitch = (delta.y / delta.length()).asin();
         assert_eq!(g.attack(0.0, pitch, 1), 1);
-        run(&mut g, 0.2, 0.0, 0.0);
+        run(&mut g, 0.6, 0.0, 0.0);
         assert_eq!(g.attack(std::f32::consts::PI, 0.0, 1), 0);
+    }
+    #[test]
+    fn shotgun_is_heavy_up_close_and_cannot_hit_beyond_range() {
+        let mut close = Game::new(1);
+        let delta = close.bodies[0].p.sub(close.p.add(V::new(0.0, 1.65, 0.0)));
+        let pitch = (delta.y / delta.length()).asin();
+        assert_eq!(close.attack(0.0, pitch, 1), 1);
+        assert!(close.bodies[0].v.z < -25.0);
+        assert_eq!(close.attack(0.0, pitch, 1), -2);
+        let mut far = Game::new(1);
+        for b in &mut far.bodies {
+            b.p = V::new(15.0, 1.65, 15.0);
+        }
+        far.bodies[0].p = V::new(0.0, 1.65, -0.0); // Ten metres from the player.
+        assert_eq!(far.attack(0.0, 0.0, 1), 0);
+        assert_eq!(far.bodies[0].v.length(), 0.0);
+    }
+    #[test]
+    fn shotgun_spread_hits_multiple_targets_and_falls_off() {
+        let mut g = Game::new(1);
+        for b in &mut g.bodies {
+            b.p = V::new(15.0, 1.65, 15.0);
+        }
+        g.bodies[0].p = V::new(-0.7, 1.65, 4.0);
+        g.bodies[1].p = V::new(0.7, 1.65, 4.0);
+        assert_eq!(g.attack(0.0, 0.0, 1), 2);
+        assert!(g.bodies[0].v.z < 0.0 && g.bodies[1].v.z < 0.0);
+        assert!(g.bodies[0].v.z.abs() < 20.0);
     }
     #[test]
     fn wall_blocks_a_shot() {
