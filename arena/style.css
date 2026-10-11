@@ -10,3 +10,5 @@
 
 #runway{position:fixed;top:124px;left:211px;background:#122e49b0;color:#d8f5ff;border:1px solid #9edfff44;border-radius:9px;padding:8px 12px;font:700 10px system-ui;letter-spacing:1px;cursor:pointer}
 @media(max-width:600px){#runway{top:112px;left:112px;font-size:9px}}@media(max-height:480px) and (orientation:landscape){#runway{top:105px}}
+
+#controls[hidden]{display:none}.settings{flex-wrap:wrap}.settings button{flex:1 1 100px}

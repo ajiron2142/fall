@@ -17,6 +17,14 @@ try:
   errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(base+'/arena.html');page.wait_for_function('window.impactState && impactState().ready && impactState().drawCalls>0')
   assert page.evaluate('impactState().weapon')=='shotgun'
+  assert page.locator('#controls').is_hidden()
+  page.locator('#touch-controls').tap()
+  assert page.locator('#controls').is_visible()
+  page.reload();page.wait_for_function('window.impactState && impactState().ready')
+  assert page.locator('#controls').is_visible()
+  page.locator('#touch-controls').tap()
+  assert page.locator('#controls').is_hidden()
+  page.locator('#touch-controls').tap()
   page.locator('#start').tap();page.locator('#weapon').tap();
   initial=page.evaluate('''()=>{const before=impactState().shots;document.getElementById('fire').dispatchEvent(new MouseEvent('click',{detail:0}));return {before,after:impactState().shots,pending:impactState().batPending};}''');assert initial['before']==initial['after'] and initial['pending'],initial
   page.wait_for_function('impactState().hits>0');assert page.evaluate('impactState().bodies[0].vz')< -15

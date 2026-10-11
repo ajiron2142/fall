@@ -15,6 +15,7 @@ Do not open arena.html through file://; browsers restrict WASM loading that way.
 Everything runs locally. No account, backend, or runtime CDN is required.
 
 WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse wheel weapon, R course, E bullet time.
+Touch controls default off; enable them in settings (saved on this device).
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
 Choose Snappy, Momentum, or Floaty movement in Pause; each starts the same course.
