@@ -69,7 +69,7 @@ function fire(){
 }
 function strike(){
  if(!ready||!running)return;read();const aim=assistedAim(),result=core.attack(aim.yaw,aim.pitch,weapon);if(result===-2)return;
- if(weapon===1)swingAge=0;recoil=1;tone(weapon===0?210:110,weapon===0?65:45,weapon===0?.14:.065,weapon===0?'triangle':'sawtooth',weapon===0?.12:.09);
+ if(weapon===1)swingAge=0;recoil=weapon===1||result>0?1:0;tone(weapon===0?210:110,weapon===0?65:45,weapon===0?.14:.065,weapon===0?'triangle':'sawtooth',weapon===0?.12:.09);
  const eye=new THREE.Vector3(data[0],data[1]+1.65,data[2]),end=eye.clone().addScaledVector(direction(aim.yaw,aim.pitch),core.last_distance());
  if(weapon===1){const start=eye.clone().addScaledVector(direction(),.8);start.y-=.14;const g=new THREE.BufferGeometry().setFromPoints([start,end]),line=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffdb94,transparent:true,opacity:.85}));scene.add(line);trails.push({line,life:.07});}
  if(result>0){stats[weapon===0?'bat':'gun']+=result;hitAge=0;shake=weapon===0?.12:.035;hitstop=weapon===0?.045:.012;const id=core.last_hit();read();const o=16+id*9;const point=new THREE.Vector3(data[o],data[o+1],data[o+2]);burst(point,32);impactWave(point);tone(weapon===0?430:700,120,.08,'square',.045);navigator.vibrate?.(weapon===0?18:8);notify(weapon===0?'CRACK!':'Hit! Keep moving and chain another target.',2);}
