@@ -81,7 +81,12 @@ try:
   page.locator('#course').tap();assert page.evaluate('impactState().courseProgress')==1
   page.locator('#pause').tap();page.reload();page.wait_for_function('window.impactState && impactState().ready');assert page.evaluate('impactState().movementPreset')==2
   page.locator('#preset-0').tap();page.locator('#start').tap();page.screenshot(path='/tmp/impact-course-mobile.png')
+  page.locator('#runway').tap();state=page.evaluate('impactState()')
+  assert state['arena']=={'width':160,'length':320} and state['runwayActive']
+  assert state['player']['x']==-50 and state['player']['z']==140
+  page.keyboard.down('KeyW');page.wait_for_function('impactState().player.z<139');page.keyboard.press('Space');page.wait_for_function('impactState().player.y>.5');page.keyboard.up('KeyW')
+  page.screenshot(path='/tmp/impact-runway.png')
   assert not errors,errors
-  print('Passed real WASM loading, bat launch and shotgun hit, simultaneous touch movement/jump/dash, bullet-time airborne suspension and delayed pellet hits after resume, pause/reset, fullscreen, touch aiming, landscape, desktop mouse attack, stable walking camera, touch/keyboard double jumps and FPS counter, mouse wheel switching and restored Q shortcut, default shotgun, three saved movement presets and floating course; no browser errors.')
+  print('Passed real WASM loading, bat launch and shotgun hit, simultaneous touch movement/jump/dash, bullet-time airborne suspension and delayed pellet hits after resume, pause/reset, fullscreen, touch aiming, landscape, desktop mouse attack, stable walking camera, touch/keyboard double jumps and FPS counter, mouse wheel switching and restored Q shortcut, default shotgun, three saved movement presets and floating course, expanded 160x320 arena and runway movement; no browser errors.')
   browser.close()
 finally:server.shutdown();server.server_close()

@@ -3,6 +3,8 @@
 use std::cell::RefCell;
 
 const COUNT: usize = 10;
+const HALF_WIDTH: f32 = 80.0;
+const HALF_LENGTH: f32 = 160.0;
 const PELLETS: usize = 72;
 const PELLET_SPEED: f32 = 45.0;
 const STRIDE: usize = 9;
@@ -445,12 +447,12 @@ impl Game {
             }
         }
         for axis in [0, 2] {
-            if axis == 0 && self.p.x.abs() > 35.5 {
-                self.p.x = self.p.x.clamp(-35.5, 35.5);
+            if axis == 0 && self.p.x.abs() > HALF_WIDTH - 0.5 {
+                self.p.x = self.p.x.clamp(-HALF_WIDTH + 0.5, HALF_WIDTH - 0.5);
                 self.v.x = 0.0;
             }
-            if axis == 2 && self.p.z.abs() > 35.5 {
-                self.p.z = self.p.z.clamp(-35.5, 35.5);
+            if axis == 2 && self.p.z.abs() > HALF_LENGTH - 0.5 {
+                self.p.z = self.p.z.clamp(-HALF_LENGTH + 0.5, HALF_LENGTH - 0.5);
                 self.v.z = 0.0;
             }
         }
@@ -512,7 +514,7 @@ impl Game {
                 } else {
                     (&mut body.p.z, &mut body.v.z)
                 };
-                let edge = 35.7 - body.r;
+                let edge = (if axis == 0 { HALF_WIDTH } else { HALF_LENGTH }) - 0.3 - body.r;
                 if p.abs() > edge {
                     *p = p.clamp(-edge, edge);
                     *v *= -0.7;
@@ -872,6 +874,31 @@ pub extern "C" fn course_progress() -> usize {
     GAME.with(|g| g.borrow().course_progress)
 }
 #[no_mangle]
+pub extern "C" fn arena_extent(axis: u32) -> f32 {
+    if axis == 0 {
+        HALF_WIDTH * 2.0
+    } else {
+        HALF_LENGTH * 2.0
+    }
+}
+#[no_mangle]
+pub extern "C" fn start_runway() {
+    GAME.with(|g| {
+        let mut g = g.borrow_mut();
+        g.p = V::new(-50.0, 0.0, 140.0);
+        g.v = V::default();
+        g.grounded = true;
+        g.air_jump_available = true;
+        g.coyote = 0.14;
+        g.jump_buffer = 0.0;
+        g.attack_cd = 0.0;
+        g.dash_cd = 0.0;
+        g.dash_time = 0.0;
+        g.course_progress = 0;
+        g.pellets.fill(Pellet::default());
+    });
+}
+#[no_mangle]
 pub extern "C" fn start_course() {
     GAME.with(|g| {
         let mut g = g.borrow_mut();
@@ -1113,6 +1140,19 @@ mod tests {
         assert_eq!(g.hits, 0);
     }
     #[test]
+    fn expanded_arena_allows_long_runs_and_stops_at_new_bounds() {
+        let mut g = Game::new(1);
+        g.p = V::new(-50.0, 0.0, 140.0);
+        run(&mut g, 12.0, 1.0, 0.0);
+        assert!(g.p.z < -38.0 && g.grounded);
+        run(&mut g, 20.0, 1.0, 0.0);
+        assert!((g.p.z - (-HALF_LENGTH + 0.5)).abs() < 0.001);
+        assert_eq!(g.v.z, 0.0);
+        g.p = V::new(HALF_WIDTH - 0.51, 0.0, 0.0);
+        run(&mut g, 1.0, 0.0, 1.0);
+        assert!((g.p.x - (HALF_WIDTH - 0.5)).abs() < 0.001);
+    }
+    #[test]
     fn movement_presets_produce_distinct_speed_and_jump_arcs() {
         let mut speeds = [0.0; 3];
         let mut airtimes = [0.0; 3];
@@ -1190,7 +1230,7 @@ mod tests {
                 g.attack(i as f32 * 0.01, -0.2, 0);
             }
         }
-        assert!(g.p.x.abs() <= 35.5 && g.p.z.abs() <= 35.5);
+        assert!(g.p.x.abs() <= HALF_WIDTH - 0.5 && g.p.z.abs() <= HALF_LENGTH - 0.5);
         for b in g.bodies {
             assert!(b.p.x.is_finite() && b.p.y.is_finite() && b.p.z.is_finite());
         }
