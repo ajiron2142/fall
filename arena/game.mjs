@@ -52,8 +52,17 @@ const bodies=[],bodyMats=[],rings=[];
 const streaks=new THREE.InstancedMesh(geo.box,new THREE.MeshBasicMaterial({color:0xffc980,transparent:true,opacity:.45,depthWrite:false}),10),zAxis=new THREE.Vector3(0,0,1),velocity=new THREE.Vector3();streaks.frustumCulled=false;scene.add(streaks);
 const flyingPellets=new THREE.InstancedMesh(geo.box,new THREE.MeshBasicMaterial({color:0xffefaa}),72);flyingPellets.frustumCulled=false;scene.add(flyingPellets);
 const weaponRoot=new THREE.Group();camera.add(weaponRoot);
-const bat=new THREE.Group();weaponRoot.add(bat);const wood=mat(0xc6d0db,{metalness:.85,roughness:.25}),wrap=mat(0x172334);make('cylinder',wood,0,.33,0,.073,.83,.073,bat);make('cylinder',wrap,0,-.2,0,.038,.34,.038,bat);make('sphere',wood,0,.74,0,.073,.07,.073,bat);make('sphere',wrap,0,-.39,0,.055,.035,.055,bat);for(let i=0;i<5;i++)make('cylinder',lightStone,0,-.31+i*.055,0,.04,.008,.04,bat);
-make('sphere',wrap,0,-.24,.015,.085,.13,.085,bat);make('box',dark,0,-.42,.08,.13,.28,.14,bat).rotation.x=-.25;make('cylinder',gold,0,.68,0,.075,.035,.075,bat);
+const bat=new THREE.Group();weaponRoot.add(bat);
+const wood=mat(0xc6d0db,{metalness:.85,roughness:.25}),wrap=mat(0x172334);
+const maple=mat(0xd8a16b,{roughness:.4,metalness:.05}),batGrip=mat(0x223039,{roughness:.95}),gloveLeather=mat(0x354957,{roughness:.8});
+const batProfile=[[0,-.045],[.036,-.042],[.046,-.025],[.046,-.008],[.03,.008],[.026,.05],[.025,.23],[.03,.33],[.045,.43],[.061,.53],[.075,.64],[.081,.82],[.08,1.01],[.076,1.06],[.062,1.09],[.035,1.11],[0,1.12]].map(([r,y])=>new THREE.Vector2(r,y));
+const batBody=new THREE.Mesh(new THREE.LatheGeometry(batProfile,24),maple);bat.add(batBody);
+for(let i=0;i<9;i++){const tape=make('cylinder',batGrip,0,.035+i*.023,0,.028,.022,.028,bat);tape.rotation.y=i*.45;}
+make('cylinder',gold,0,.31,0,.032,.024,.032,bat);make('cylinder',wrap,0,.9,0,.082,.075,.082,bat);
+const emblem=make('box',gold,.002,.9,.083,.04,.04,.006,bat);emblem.rotation.z=Math.PI/4;
+for(const y of [.065,.195]){const hand=new THREE.Group();hand.position.set(.014,y,.045);bat.add(hand);make('sphere',gloveLeather,0,0,0,.063,.075,.073,hand);make('box',batGrip,.008,.012,.056,.082,.06,.018,hand);for(let i=0;i<3;i++)make('box',lightStone,-.022+i*.021,.012,.069,.009,.032,.008,hand);make('sphere',gloveLeather,-.038,-.036,-.018,.035,.049,.04,hand);}
+const batArms=new THREE.Group();weaponRoot.add(batArms);const batSleeves=[];
+for(let i=0;i<2;i++){const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.052,.072,1,12),wrap);batArms.add(sleeve);batSleeves.push(sleeve);}
 const gun=new THREE.Group();weaponRoot.add(gun);
 make('box',dark,0,0,0,.23,.22,.42,gun);make('box',stone,0,.065,-.05,.24,.1,.32,gun);
 for(const y of [.055,-.065]){const barrel=make('cylinder',wood,0,y,-.4,.058,.7,.058,gun);barrel.rotation.x=Math.PI/2;make('ring',dark,0,y,-.755,.058,.058,.058,gun);}
@@ -66,15 +75,28 @@ const handLight=new THREE.PointLight(0xe0eeff,3,4);handLight.position.set(-.4,.4
 const sparkPositions=new Float32Array(160*3),sparkGeo=new THREE.BufferGeometry();sparkGeo.setAttribute('position',new THREE.BufferAttribute(sparkPositions,3));const sparks=new THREE.Points(sparkGeo,new THREE.PointsMaterial({color:0xffdeaa,size:.075,transparent:true,opacity:.9,depthWrite:false}));sparks.frustumCulled=false;scene.add(sparks);
 function burst(point,count=18){for(let i=0;i<count;i++){if(particles.length>=160)particles.shift();particles.push({p:point.clone(),v:new THREE.Vector3((Math.random()-.5)*7,Math.random()*5,(Math.random()-.5)*7),life:.3+Math.random()*.25});}}
 function impactWave(point){const mesh=new THREE.Mesh(geo.ring,new THREE.MeshBasicMaterial({color:0xffcf7c,transparent:true,opacity:.9,depthWrite:false}));mesh.position.copy(point);mesh.quaternion.copy(camera.quaternion);scene.add(mesh);waves.push({mesh,life:.22});tone(85,30,.18,'sine',.3);}
-// Horizontal shoulder-to-shoulder swing: windup, snap through contact, then recover.
+// Grip and barrel targets trace a forward arc around the shoulders.
+// Orient the bat toward its moving tip, rather than rolling a vertical cylinder.
+const BAT_CONTACT=.12,BAT_CYCLE=.42;
 const batPoses=[
- [0,.44,-.53,-.95,.12,-.12,-.55],
- [.05,.57,-.48,-.82,.15,-.38,-.15],
- [.095,-.05,-.38,-1.12,.05,.2,1.28],
- [.16,-.5,-.42,-.95,-.05,.6,1.8],
- [.36,.44,-.53,-.95,.12,-.12,-.55]
+ [0,.38,-.45,-.68,.62,.48,-1.05],
+ [.065,.57,-.42,-.48,.91,.48,-.33],
+ [.12,.08,-.34,-.99,-.12,.05,-2.08],
+ [.20,-.37,-.39,-.87,-1.13,-.04,-1.43],
+ [.28,-.28,-.46,-.73,-.67,.34,-1.25],
+ [.42,.38,-.45,-.68,.62,.48,-1.05]
 ];
-function poseBat(narrow){let a=batPoses[0],b=a;if(swingAge<.36){for(let i=1;i<batPoses.length;i++)if(swingAge<=batPoses[i][0]){a=batPoses[i-1];b=batPoses[i];break;}}const t=a===b?0:THREE.MathUtils.smoothstep(swingAge,a[0],b[0]),v=i=>THREE.MathUtils.lerp(a[i],b[i],t);bat.scale.setScalar(narrow?.8:1);bat.position.set(v(1)*(narrow?.65:1)-(narrow?.14:0),v(2),v(3));bat.rotation.set(v(4),v(5),v(6)*(narrow&&v(6)<0?.65:1));}
+const batUp=new THREE.Vector3(0,1,0),batAim=new THREE.Vector3();
+function sampleBat(age){let a=batPoses[0],b=a;if(age<BAT_CYCLE){for(let i=1;i<batPoses.length;i++)if(age<=batPoses[i][0]){a=batPoses[i-1];b=batPoses[i];break;}}const t=a===b?0:THREE.MathUtils.smoothstep(age,a[0],b[0]);return a.map((n,i)=>THREE.MathUtils.lerp(n,b[i],t));}
+const batTrailPositions=new Float32Array(8*6*3),batTrailGeometry=new THREE.BufferGeometry();batTrailGeometry.setAttribute('position',new THREE.BufferAttribute(batTrailPositions,3));
+const batTrail=new THREE.Mesh(batTrailGeometry,new THREE.MeshBasicMaterial({color:0xffcc86,transparent:true,opacity:.15,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));batTrail.renderOrder=9;batTrail.frustumCulled=false;weaponRoot.add(batTrail);
+function poseBat(narrow){const v=sampleBat(swingAge),scale=narrow?.8:1;bat.scale.setScalar(scale);bat.position.set(v[1]*(narrow?.55:1)-(narrow?.04:0),v[2],v[3]-(narrow?.18:0));batAim.set(v[4]-v[1],v[5]-v[2],v[6]-v[3]).normalize();bat.quaternion.setFromUnitVectors(batUp,batAim);
+ bat.updateMatrix();batArms.visible=weapon===0;
+ for(let i=0;i<2;i++){const hand=new THREE.Vector3(.014,i?.195:.065,.045).applyMatrix4(bat.matrix),anchor=new THREE.Vector3(i?-.18:.38,-1.0,-.24),axis=hand.clone().sub(anchor),arm=batSleeves[i];arm.position.copy(anchor).addScaledVector(axis,.5);arm.quaternion.setFromUnitVectors(batUp,axis.clone().normalize());arm.scale.set(1,axis.length(),1);}
+
+ batTrail.visible=running&&weapon===0&&swingAge>.065&&swingAge<.23;
+ if(batTrail.visible){let offset=0;for(let i=0;i<8;i++){const vertices=[];for(const t of [i/8,(i+1)/8]){const p=sampleBat(Math.max(.065,swingAge-.05+t*.05)),grip=new THREE.Vector3(p[1]*(narrow?.55:1)-(narrow?.04:0),p[2],p[3]-(narrow?.18:0)),aim=new THREE.Vector3(p[4]-p[1],p[5]-p[2],p[6]-p[3]).normalize();vertices.push(grip.clone().addScaledVector(aim,.65*scale),grip.clone().addScaledVector(aim,1.10*scale));}for(const index of [0,1,2,2,1,3]){const p=vertices[index];batTrailPositions[offset++]=p.x;batTrailPositions[offset++]=p.y;batTrailPositions[offset++]=p.z;}}batTrailGeometry.attributes.position.needsUpdate=true;}
+}
 function direction(a=yaw,b=pitch){return new THREE.Vector3(-Math.sin(a)*Math.cos(b),Math.sin(b),-Math.cos(a)*Math.cos(b));}
 function assistedAim(){
  if(!assist)return {yaw,pitch};const eye=new THREE.Vector3(data[0],data[1]+1.65,data[2]),forward=direction();let best=.95,chosen=null;
@@ -83,7 +105,7 @@ function assistedAim(){
 }
 function fire(){
  if(!ready||!running)return;
- if(weapon===0){if(batPending||swingAge<.36)return;read();if(data[13]>0)return;batPending=true;swingAge=0;tone(350,80,.12,'triangle',.09);return;}
+ if(weapon===0){if(batPending||swingAge<BAT_CYCLE)return;read();if(data[13]>0)return;batPending=true;swingAge=0;tone(350,80,.12,'triangle',.09);return;}
  strike();
 }
 function strike(){
@@ -130,7 +152,7 @@ document.addEventListener('pointerlockchange',()=>{if(running&&matchMedia('(poin
 window.addEventListener('keydown',e=>{if(!running)return;if(e.code==='Escape'){pause();return;}if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.repeat)return;if(e.code==='Space')jumpQueued=true;if(e.code==='ShiftLeft'||e.code==='ShiftRight')dashQueued=true;if(e.code==='KeyQ')switchWeapon();if(e.code==='KeyR')goCourse();if(e.code==='KeyE')toggleSlow();if(e.code==='KeyF')fullscreen();});window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)pause();});
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();$('start').disabled=true;$('start').textContent='Graphics interrupted — reload to continue';});
 function frame(now){requestAnimationFrame(frame);const frameTime=Math.max(0,(now-last)/1000);let dt=Math.min(frameTime,.04);last=now;if(running){fpsTime+=frameTime;fpsFrames++;if(fpsTime>=.5){$('fps').textContent=Math.round(fpsFrames/fpsTime)+' FPS';fpsTime=0;fpsFrames=0;}}elapsed+=dt;const worldDt=dt*(slow?.08:1);swingAge+=worldDt;recoil=Math.max(0,recoil-worldDt*(weapon===1?5:7));hitAge+=worldDt;hitstop=Math.max(0,hitstop-worldDt);landing=THREE.MathUtils.damp(landing,0,12,dt);
- if(batPending&&running&&swingAge>=.095){batPending=false;strike();}
+ if(batPending&&running&&swingAge>=BAT_CONTACT){batPending=false;strike();}
  if(ready){
   if(running){const forward=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-stick.z,side=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+stick.x;let remain=dt*(hitstop>0?.15:1);while(remain>0){const step=Math.min(remain,1/120);core.tick(step,forward,side,yaw,jumpQueued?1:0,dashQueued?1:0,slow?1:0);jumpQueued=dashQueued=false;remain-=step;}if(fireHeld)fire();}
   read();if(data[9]>seenHits){impactFeedback(data[9]-seenHits,core.last_hit(),core.last_impact_weapon());seenHits=data[9];}
@@ -182,4 +204,4 @@ try{
  for(let i=0;i<10;i++){const o=16+i*9,m=mat(i<6?0xff9138:0x64e6ff,{roughness:i<6?.25:.35,metalness:i<6?.25:.2});bodyMats.push(m);const g=new THREE.Group();scene.add(g);make('sphere',m,0,0,0,data[o+3],data[o+3],data[o+3],g);if(i<6){const seam=make('ring',dark,0,0,0,data[o+3]*.99,data[o+3]*.99,data[o+3]*.99,g);seam.rotation.x=Math.PI/2;const band=make('ring',gold,0,0,0,data[o+3]*.99,data[o+3]*.99,data[o+3]*.99,g);band.rotation.y=Math.PI/2;}if(i>=6){const ring=make('ring',dark,0,0,0,.67,.67,.67,g);rings[i]=ring;}bodies.push(g);}
  ready=true;let savedPreset=0;try{savedPreset=Number(localStorage.getItem('impact-movement-preset'))||0;}catch{}core.set_movement_preset(Math.max(0,Math.min(2,savedPreset)));updatePreset();updateWeapon();$('start').disabled=false;$('start').textContent='Enter the arena ↗';notify('Rust physics loaded. Bat and shotgun share the same movement.',5);
 }catch(error){$('start').textContent='Could not load the physics';$('notice').textContent=error.message;$('capability').textContent='Open through the hosted site or a local HTTP server; file:// cannot load WASM.';console.error(error);}
-window.impactState=()=>{if(!ready)return {ready:false};read();return {ready,running,swingAge,batPending,movementPreset:core.movement_preset(),playground,wallRunning:!!core.wall_running(),arena:{width:core.arena_extent(0),length:core.arena_extent(1)},courseActive,runwayActive,courseProgress:core.course_progress(),obstacles:Array.from({length:core.obstacle_count()},(_,i)=>({x:core.obstacle(i,0),z:core.obstacle(i,1),w:core.obstacle(i,2),d:core.obstacle(i,3),h:core.obstacle(i,4),base:core.obstacle(i,5),group:core.obstacle(i,6),wall:!!core.obstacle(i,7)})),projectiles:Array.from({length:core.projectile_count()},(_,i)=>core.projectile(i,0)>0?{x:core.projectile(i,1),y:core.projectile(i,2),z:core.projectile(i,3),travel:core.projectile(i,7)}:null).filter(Boolean),touchControls,weapon:weapon===0?'bat':'shotgun',slow,assist,yaw,pitch,grounded:!!data[6],airJumpAvailable:!!core.air_jump_available(),score:data[8],hits:data[9],shots:data[10],hoops:data[15],player:{x:data[0],y:data[1],z:data[2],vx:data[3],vy:data[4],vz:data[5]},bodies:Array.from({length:10},(_,i)=>{const o=16+i*9;return {x:data[o],y:data[o+1],z:data[o+2],vx:data[o+6],vy:data[o+7],vz:data[o+8]};}),camera:{x:camera.position.x,y:camera.position.y,z:camera.position.z},drawCalls:renderer.info.render.calls};};
+window.impactState=()=>{if(!ready)return {ready:false};read();return {ready,running,swingAge,batPending,batVisual:{position:bat.position.toArray(),tip:bat.localToWorld(new THREE.Vector3(0,1.12,0)).toArray(),trailVisible:batTrail.visible},movementPreset:core.movement_preset(),playground,wallRunning:!!core.wall_running(),arena:{width:core.arena_extent(0),length:core.arena_extent(1)},courseActive,runwayActive,courseProgress:core.course_progress(),obstacles:Array.from({length:core.obstacle_count()},(_,i)=>({x:core.obstacle(i,0),z:core.obstacle(i,1),w:core.obstacle(i,2),d:core.obstacle(i,3),h:core.obstacle(i,4),base:core.obstacle(i,5),group:core.obstacle(i,6),wall:!!core.obstacle(i,7)})),projectiles:Array.from({length:core.projectile_count()},(_,i)=>core.projectile(i,0)>0?{x:core.projectile(i,1),y:core.projectile(i,2),z:core.projectile(i,3),travel:core.projectile(i,7)}:null).filter(Boolean),touchControls,weapon:weapon===0?'bat':'shotgun',slow,assist,yaw,pitch,grounded:!!data[6],airJumpAvailable:!!core.air_jump_available(),score:data[8],hits:data[9],shots:data[10],hoops:data[15],player:{x:data[0],y:data[1],z:data[2],vx:data[3],vy:data[4],vz:data[5]},bodies:Array.from({length:10},(_,i)=>{const o=16+i*9;return {x:data[o],y:data[o+1],z:data[o+2],vx:data[o+6],vy:data[o+7],vz:data[o+8]};}),camera:{x:camera.position.x,y:camera.position.y,z:camera.position.z},drawCalls:renderer.info.render.calls};};
