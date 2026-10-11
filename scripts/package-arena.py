@@ -18,10 +18,13 @@ WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse whe
 Touch controls default off; enable them in settings (saved on this device).
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
-Choose Snappy, Momentum, or Floaty movement in Pause; each starts the same course.
+Choose Snappy, Momentum, or Floaty movement in Pause; each restarts the selected playground.
 The shotgun is equipped by default. Course / R restarts at platform 01.
 Air jump with movement input redirects momentum; bullet time gives time to aim.
-The course uses long platforms spaced 20 metres apart with gentle turns.
+Seven playgrounds: three tall jump tiers, three wall-run tiers, one combined Expert.
+Jump routes are tuned for Snappy. Select sections in Pause; R restarts your section.
+Move alongside glowing walls while airborne to wall-run; Jump kicks away.
+Wall-only sections need no jumps; only the combined section requires both skills.
 The arena is 160 x 320 metres. Runway starts a clear 280-metre sprint lane.
 
 The Rust core handles movement, collisions, bat impulses, travelling shotgun pellets,

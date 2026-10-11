@@ -49,128 +49,427 @@ struct Block {
     h: f32,
     base: f32,
 }
-const BLOCKS: [Block; 15] = [
+const BLOCKS: [Block; 51] = [
     Block {
-        x: -6.0,
-        z: 0.0,
-        w: 4.0,
-        d: 4.0,
-        h: 1.3,
-        base: 0.0,
+        x: -6.00,
+        z: 0.00,
+        w: 4.00,
+        d: 4.00,
+        h: 1.30,
+        base: 0.00,
     },
     Block {
-        x: 6.0,
-        z: -4.0,
-        w: 4.0,
-        d: 4.0,
-        h: 2.0,
-        base: 0.0,
+        x: 6.00,
+        z: -4.00,
+        w: 4.00,
+        d: 4.00,
+        h: 2.00,
+        base: 0.00,
     },
     Block {
-        x: -11.0,
-        z: -8.0,
-        w: 3.0,
-        d: 6.0,
-        h: 2.8,
-        base: 0.0,
+        x: -11.00,
+        z: -8.00,
+        w: 3.00,
+        d: 6.00,
+        h: 2.80,
+        base: 0.00,
     },
     Block {
-        x: 0.0,
-        z: -13.0,
-        w: 7.0,
-        d: 2.0,
-        h: 0.9,
-        base: 0.0,
+        x: 0.00,
+        z: -13.00,
+        w: 7.00,
+        d: 2.00,
+        h: 0.90,
+        base: 0.00,
     },
     Block {
-        x: 11.0,
-        z: 7.0,
-        w: 4.0,
-        d: 4.0,
-        h: 1.1,
-        base: 0.0,
+        x: 11.00,
+        z: 7.00,
+        w: 4.00,
+        d: 4.00,
+        h: 1.10,
+        base: 0.00,
     },
     Block {
-        x: 18.0,
-        z: 110.0,
-        w: 12.0,
-        d: 18.0,
-        h: 0.8,
+        x: -22.00,
+        z: 110.00,
+        w: 7.00,
+        d: 8.00,
+        h: 0.80,
         base: 0.35,
     },
     Block {
-        x: 22.0,
-        z: 90.0,
-        w: 10.0,
-        d: 14.0,
-        h: 1.5,
-        base: 1.05,
+        x: -20.00,
+        z: 99.00,
+        w: 7.00,
+        d: 8.00,
+        h: 2.10,
+        base: 1.65,
     },
     Block {
-        x: 28.0,
-        z: 70.0,
-        w: 10.0,
-        d: 14.0,
-        h: 2.2,
-        base: 1.75,
+        x: -18.00,
+        z: 88.00,
+        w: 7.00,
+        d: 8.00,
+        h: 3.40,
+        base: 2.95,
     },
     Block {
-        x: 36.0,
-        z: 50.0,
-        w: 12.0,
-        d: 16.0,
-        h: 2.9,
-        base: 2.45,
+        x: -20.00,
+        z: 77.00,
+        w: 7.00,
+        d: 8.00,
+        h: 4.70,
+        base: 4.25,
     },
     Block {
-        x: 42.0,
-        z: 30.0,
-        w: 12.0,
-        d: 16.0,
-        h: 3.6,
-        base: 3.15,
+        x: -22.00,
+        z: 66.00,
+        w: 7.00,
+        d: 8.00,
+        h: 6.00,
+        base: 5.55,
     },
     Block {
-        x: 42.0,
-        z: 10.0,
-        w: 12.0,
-        d: 16.0,
-        h: 4.3,
-        base: 3.85,
+        x: -24.00,
+        z: 55.00,
+        w: 7.00,
+        d: 8.00,
+        h: 7.30,
+        base: 6.85,
     },
     Block {
-        x: 36.0,
-        z: -10.0,
-        w: 12.0,
-        d: 16.0,
-        h: 5.0,
+        x: -26.00,
+        z: 44.00,
+        w: 7.00,
+        d: 8.00,
+        h: 8.60,
+        base: 8.15,
+    },
+    Block {
+        x: -24.00,
+        z: 33.00,
+        w: 7.00,
+        d: 8.00,
+        h: 9.90,
+        base: 9.45,
+    },
+    Block {
+        x: -22.00,
+        z: 22.00,
+        w: 7.00,
+        d: 8.00,
+        h: 11.20,
+        base: 10.75,
+    },
+    Block {
+        x: -20.00,
+        z: 11.00,
+        w: 7.00,
+        d: 8.00,
+        h: 12.50,
+        base: 12.05,
+    },
+    Block {
+        x: 3.00,
+        z: 110.00,
+        w: 6.00,
+        d: 7.00,
+        h: 0.80,
+        base: 0.35,
+    },
+    Block {
+        x: 5.00,
+        z: 97.00,
+        w: 6.00,
+        d: 7.00,
+        h: 2.70,
+        base: 2.25,
+    },
+    Block {
+        x: 7.00,
+        z: 84.00,
+        w: 6.00,
+        d: 7.00,
+        h: 4.60,
+        base: 4.15,
+    },
+    Block {
+        x: 5.00,
+        z: 71.00,
+        w: 6.00,
+        d: 7.00,
+        h: 6.50,
+        base: 6.05,
+    },
+    Block {
+        x: 3.00,
+        z: 58.00,
+        w: 6.00,
+        d: 7.00,
+        h: 8.40,
+        base: 7.95,
+    },
+    Block {
+        x: 1.00,
+        z: 45.00,
+        w: 6.00,
+        d: 7.00,
+        h: 10.30,
+        base: 9.85,
+    },
+    Block {
+        x: -1.00,
+        z: 32.00,
+        w: 6.00,
+        d: 7.00,
+        h: 12.20,
+        base: 11.75,
+    },
+    Block {
+        x: 1.00,
+        z: 19.00,
+        w: 6.00,
+        d: 7.00,
+        h: 14.10,
+        base: 13.65,
+    },
+    Block {
+        x: 3.00,
+        z: 6.00,
+        w: 6.00,
+        d: 7.00,
+        h: 16.00,
+        base: 15.55,
+    },
+    Block {
+        x: 5.00,
+        z: -7.00,
+        w: 6.00,
+        d: 7.00,
+        h: 17.90,
+        base: 17.45,
+    },
+    Block {
+        x: 30.00,
+        z: 110.00,
+        w: 5.50,
+        d: 6.50,
+        h: 0.80,
+        base: 0.35,
+    },
+    Block {
+        x: 32.00,
+        z: 95.00,
+        w: 5.50,
+        d: 6.50,
+        h: 3.30,
+        base: 2.85,
+    },
+    Block {
+        x: 34.00,
+        z: 80.00,
+        w: 5.50,
+        d: 6.50,
+        h: 5.80,
+        base: 5.35,
+    },
+    Block {
+        x: 32.00,
+        z: 65.00,
+        w: 5.50,
+        d: 6.50,
+        h: 8.30,
+        base: 7.85,
+    },
+    Block {
+        x: 30.00,
+        z: 50.00,
+        w: 5.50,
+        d: 6.50,
+        h: 10.80,
+        base: 10.35,
+    },
+    Block {
+        x: 28.00,
+        z: 35.00,
+        w: 5.50,
+        d: 6.50,
+        h: 13.30,
+        base: 12.85,
+    },
+    Block {
+        x: 26.00,
+        z: 20.00,
+        w: 5.50,
+        d: 6.50,
+        h: 15.80,
+        base: 15.35,
+    },
+    Block {
+        x: 28.00,
+        z: 5.00,
+        w: 5.50,
+        d: 6.50,
+        h: 18.30,
+        base: 17.85,
+    },
+    Block {
+        x: 30.00,
+        z: -10.00,
+        w: 5.50,
+        d: 6.50,
+        h: 20.80,
+        base: 20.35,
+    },
+    Block {
+        x: 32.00,
+        z: -25.00,
+        w: 5.50,
+        d: 6.50,
+        h: 23.30,
+        base: 22.85,
+    },
+    Block {
+        x: 63.00,
+        z: 125.00,
+        w: 8.00,
+        d: 10.00,
+        h: 6.00,
+        base: 5.55,
+    },
+    Block {
+        x: 66.00,
+        z: 114.00,
+        w: 1.00,
+        d: 24.00,
+        h: 14.00,
+        base: 0.00,
+    },
+    Block {
+        x: 63.00,
+        z: 99.00,
+        w: 8.00,
+        d: 8.00,
+        h: 5.20,
+        base: 4.75,
+    },
+    Block {
+        x: 63.00,
+        z: 35.00,
+        w: 6.00,
+        d: 10.00,
+        h: 6.00,
+        base: 5.55,
+    },
+    Block {
+        x: 66.00,
+        z: 18.00,
+        w: 1.00,
+        d: 36.00,
+        h: 14.00,
+        base: 0.00,
+    },
+    Block {
+        x: 63.00,
+        z: -3.00,
+        w: 6.00,
+        d: 8.00,
+        h: 5.20,
+        base: 4.75,
+    },
+    Block {
+        x: 63.00,
+        z: -55.00,
+        w: 4.00,
+        d: 10.00,
+        h: 6.00,
+        base: 5.55,
+    },
+    Block {
+        x: 66.00,
+        z: -78.00,
+        w: 1.00,
+        d: 48.00,
+        h: 14.00,
+        base: 0.00,
+    },
+    Block {
+        x: 63.00,
+        z: -105.00,
+        w: 4.00,
+        d: 8.00,
+        h: 5.20,
+        base: 4.75,
+    },
+    Block {
+        x: 0.00,
+        z: -55.00,
+        w: 8.00,
+        d: 8.00,
+        h: 5.00,
         base: 4.55,
     },
     Block {
-        x: 28.0,
-        z: -30.0,
-        w: 12.0,
-        d: 16.0,
-        h: 5.7,
-        base: 5.25,
+        x: 0.00,
+        z: -90.00,
+        w: 6.00,
+        d: 7.00,
+        h: 8.00,
+        base: 7.55,
     },
     Block {
-        x: 18.0,
-        z: -50.0,
-        w: 12.0,
-        d: 16.0,
-        h: 6.4,
-        base: 5.95,
+        x: 0.00,
+        z: -123.00,
+        w: 5.00,
+        d: 6.00,
+        h: 11.00,
+        base: 10.55,
     },
     Block {
-        x: 6.0,
-        z: -70.0,
-        w: 16.0,
-        d: 20.0,
-        h: 7.1,
-        base: 6.65,
+        x: 0.00,
+        z: -148.00,
+        w: 7.00,
+        d: 8.00,
+        h: 14.00,
+        base: 13.55,
+    },
+    Block {
+        x: 4.00,
+        z: -73.00,
+        w: 1.00,
+        d: 38.00,
+        h: 18.00,
+        base: 0.00,
+    },
+    Block {
+        x: 4.00,
+        z: -106.00,
+        w: 1.00,
+        d: 34.00,
+        h: 21.00,
+        base: 0.00,
+    },
+    Block {
+        x: 4.00,
+        z: -136.00,
+        w: 1.00,
+        d: 26.00,
+        h: 24.00,
+        base: 0.00,
     },
 ];
+const GROUPS: [i32; 51] = [
+    -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6,
+];
+const WALLS: [bool; 51] = [
+    false, false, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, true, false, false, true,
+    false, false, true, false, false, false, false, false, true, true, true,
+];
+const STARTS: [usize; 7] = [5, 15, 25, 35, 38, 41, 44];
 #[derive(Clone, Copy)]
 struct Movement {
     speed: f32,
@@ -239,6 +538,13 @@ struct Game {
     grounded: bool,
     movement_preset: usize,
     course_progress: usize,
+    playground: usize,
+    wall_running: bool,
+    wall_time: f32,
+    wall_lock: f32,
+    wall_normal: f32,
+    used_wall: bool,
+    used_jump: bool,
     coyote: f32,
     air_jump_available: bool,
     jump_buffer: f32,
@@ -301,6 +607,13 @@ impl Game {
             grounded: true,
             movement_preset: 0,
             course_progress: 0,
+            playground: 0,
+            wall_running: false,
+            wall_time: 0.0,
+            wall_lock: 0.0,
+            wall_normal: 0.0,
+            used_wall: false,
+            used_jump: false,
             coyote: 0.14,
             air_jump_available: true,
             jump_buffer: 0.0,
@@ -336,6 +649,10 @@ impl Game {
         let dt = dt.clamp(0.0, 1.0 / 60.0) * if slow { 0.08 } else { 1.0 };
         if !dt.is_finite() || !yaw.is_finite() {
             return;
+        }
+        self.wall_lock = (self.wall_lock - dt).max(0.0);
+        if self.grounded {
+            self.wall_time = 0.0;
         }
         self.slow = slow;
         self.time += dt;
@@ -395,7 +712,44 @@ impl Game {
                 }
             }
         }
-        if self.jump_buffer > 0.0 && self.coyote > 0.0 {
+        self.wall_running = false;
+        if !self.grounded && self.wall_lock == 0.0 && self.wall_time < 3.4 && wish.z.abs() > 0.25 {
+            for (index, wall) in BLOCKS.into_iter().enumerate() {
+                if !WALLS[index] {
+                    continue;
+                }
+                let normal = if self.p.x >= wall.x { 1.0 } else { -1.0 };
+                let face = wall.x + normal * (wall.w / 2.0 + 0.32);
+                if (self.p.x - face).abs() < 0.75
+                    && (self.p.z - wall.z).abs() < wall.d / 2.0
+                    && self.p.y > wall.base + 0.3
+                    && self.p.y + 1.7 < wall.h
+                    && (self.v.x * self.v.x + self.v.z * self.v.z).sqrt() > 5.0
+                {
+                    self.wall_running = true;
+                    self.used_wall = true;
+                    self.wall_normal = normal;
+                    self.wall_time += dt;
+                    self.p.x = face;
+                    self.v.x = 0.0;
+                    self.v.z = wish.z.signum() * tuning.speed.max(18.0);
+                    self.v.y = self.v.y.clamp(-0.2, 0.0);
+                    break;
+                }
+            }
+        }
+        if jump {
+            self.used_jump = true;
+        }
+        if jump && self.wall_running {
+            self.v.x = self.wall_normal * 8.0;
+            self.v.y = tuning.jump;
+            self.wall_running = false;
+            self.wall_lock = 0.25;
+            self.air_jump_available = true;
+            self.jump_buffer = 0.0;
+            self.dash_time = 0.0;
+        } else if self.jump_buffer > 0.0 && self.coyote > 0.0 {
             self.v.y = tuning.jump;
             self.grounded = false;
             self.coyote = 0.0;
@@ -431,7 +785,11 @@ impl Game {
             self.dash_cd = 0.55;
         }
         let old_y = self.p.y;
-        self.v.y -= tuning.gravity * pdt;
+        self.v.y -= if self.wall_running {
+            0.0
+        } else {
+            tuning.gravity
+        } * pdt;
         self.p = self.p.add(self.v.scale(pdt));
         self.grounded = false;
         if self.p.y <= 0.0 {
@@ -447,8 +805,22 @@ impl Game {
                     self.p.y = b.h;
                     self.v.y = 0.0;
                     self.grounded = true;
-                    if index >= 5 {
-                        self.course_progress = self.course_progress.max(index - 4);
+                    if GROUPS[index] == self.playground as i32 && !WALLS[index] {
+                        let progress = BLOCKS
+                            .iter()
+                            .enumerate()
+                            .take(index + 1)
+                            .filter(|(i, _)| GROUPS[*i] == self.playground as i32 && !WALLS[*i])
+                            .count();
+                        let progress = if self.playground == 6
+                            && progress == 4
+                            && !(self.used_wall && self.used_jump)
+                        {
+                            3
+                        } else {
+                            progress
+                        };
+                        self.course_progress = self.course_progress.max(progress);
                     }
                 } else if old_y + 1.7 <= b.base && self.p.y + 1.7 >= b.base && self.v.y > 0.0 {
                     self.p.y = b.base - 1.7;
@@ -907,15 +1279,33 @@ pub extern "C" fn start_runway() {
         g.dash_cd = 0.0;
         g.dash_time = 0.0;
         g.course_progress = 0;
+        g.wall_running = false;
+        g.wall_time = 0.0;
+        g.wall_lock = 0.0;
+        g.used_wall = false;
+        g.used_jump = false;
         g.pellets.fill(Pellet::default());
     });
 }
 #[no_mangle]
+pub extern "C" fn wall_running() -> u32 {
+    GAME.with(|g| g.borrow().wall_running as u32)
+}
+#[no_mangle]
 pub extern "C" fn start_course() {
+    let index = GAME.with(|g| g.borrow().playground);
+    start_playground(index);
+}
+#[no_mangle]
+pub extern "C" fn start_playground(index: usize) {
     GAME.with(|g| {
         let mut g = g.borrow_mut();
-        let b = BLOCKS[5];
+        g.playground = index.min(6);
+        let b = BLOCKS[STARTS[g.playground]];
         g.p = V::new(b.x, b.h, b.z);
+        if (3..6).contains(&g.playground) {
+            g.p.x = 65.18;
+        }
         g.v = V::default();
         g.grounded = true;
         g.air_jump_available = true;
@@ -925,6 +1315,11 @@ pub extern "C" fn start_course() {
         g.dash_cd = 0.0;
         g.dash_time = 0.0;
         g.course_progress = 1;
+        g.wall_running = false;
+        g.wall_time = 0.0;
+        g.wall_lock = 0.0;
+        g.used_wall = false;
+        g.used_jump = false;
         g.pellets.fill(Pellet::default());
     });
 }
@@ -943,6 +1338,8 @@ pub extern "C" fn obstacle(index: usize, field: usize) -> f32 {
             3 => b.d,
             4 => b.h,
             5 => b.base,
+            6 => GROUPS[index] as f32,
+            7 => WALLS[index] as u32 as f32,
             _ => 0.0,
         })
         .unwrap_or(0.0)
@@ -1184,39 +1581,168 @@ mod tests {
         assert!((g.p.x - (HALF_WIDTH - 0.5)).abs() < 0.001);
     }
     #[test]
-    fn flowing_course_gaps_are_reachable_at_speed_in_every_preset() {
+    fn wall_only_playgrounds_finish_without_jumping_in_all_presets() {
         for preset in 0..3 {
-            for index in 5..14 {
-                let from = BLOCKS[index];
-                let to = BLOCKS[index + 1];
-                let yaw = -(to.x - from.x).atan2(from.z - to.z);
+            for group in 3..6 {
+                let b = BLOCKS[STARTS[group]];
                 let mut g = Game::new(1);
+                g.playground = group;
                 g.movement_preset = preset;
-                g.p = V::new(from.x, from.h, from.z);
-                g.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(MOVEMENT[preset].speed);
-                let mut landed = false;
-                for frame in 0..360 {
-                    g.step(
-                        1.0 / 120.0,
-                        1.0,
-                        0.0,
-                        yaw,
-                        frame == 0 || frame == 42,
-                        false,
-                        false,
-                    );
-                    if frame > 42 && g.grounded {
-                        landed = (g.p.y - to.h).abs() < 0.001;
+                g.p = V::new(65.18, b.h, b.z);
+                let mut touched = false;
+                for _ in 0..720 {
+                    g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+                    touched |= g.wall_running;
+                    if g.course_progress == 2 {
                         break;
                     }
                 }
                 assert!(
-                    landed,
-                    "preset {preset}, gap {index}: {:?}",
+                    touched && g.course_progress == 2,
+                    "wall tier {group}, preset {preset}: {:?}",
                     (g.p.x, g.p.y, g.p.z)
                 );
             }
         }
+    }
+    #[test]
+    fn wall_jump_pushes_away_and_wall_run_respects_bullet_time() {
+        let mut g = Game::new(1);
+        g.p = V::new(65.18, 6.0, 115.0);
+        g.grounded = false;
+        g.coyote = 0.0;
+        g.v = V::new(0.0, -2.0, -18.0);
+        let z = g.p.z;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, true);
+        assert!(g.wall_running && (g.p.z - z).abs() < 0.02);
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, true, false, true);
+        assert!(!g.wall_running && g.v.x < -7.0 && g.v.y > 10.0 && g.air_jump_available);
+        g.p.y = 0.0;
+        g.grounded = true;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+        assert!(!g.wall_running);
+    }
+    #[test]
+    fn tall_jump_tiers_are_reachable_with_snappy_without_wall_running() {
+        for group in 0..3 {
+            for preset in 0..1 {
+                for index in STARTS[group]..STARTS[group] + 9 {
+                    let from = BLOCKS[index];
+                    let to = BLOCKS[index + 1];
+                    let yaw = -(to.x - from.x).atan2(from.z - to.z);
+                    let mut reached = false;
+                    for second in [usize::MAX, 18, 30, 42, 54, 66, 78] {
+                        let mut g = Game::new(1);
+                        g.playground = group;
+                        g.movement_preset = preset;
+                        g.p = V::new(from.x, from.h, from.z);
+                        g.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(MOVEMENT[preset].speed);
+                        for frame in 0..480 {
+                            g.step(
+                                1.0 / 120.0,
+                                1.0,
+                                0.0,
+                                yaw,
+                                frame == 0 || frame == second,
+                                false,
+                                false,
+                            );
+                            assert!(!g.wall_running);
+                            if frame > 1 && g.grounded {
+                                reached |= (g.p.y - to.h).abs() < 0.001;
+                                break;
+                            }
+                        }
+                        if reached {
+                            break;
+                        }
+                    }
+                    assert!(reached, "jump tier {group}, preset {preset}, gap {index}");
+                }
+            }
+        }
+    }
+    #[test]
+    fn combined_gaps_can_chain_wall_runs_and_jumps_with_snappy() {
+        for segment in 0..3 {
+            let from = BLOCKS[44 + segment];
+            let to = BLOCKS[45 + segment];
+            let wall = BLOCKS[48 + segment];
+            let face = wall.x - wall.w / 2.0 - 0.32;
+            let mut reached = false;
+            for kick_distance in [6.0, 9.0, 12.0, 15.0, 18.0] {
+                for double_delay in [24, 36, 48, 60] {
+                    let mut g = Game::new(1);
+                    g.playground = 6;
+                    g.p = V::new(from.x, from.h, from.z);
+                    let mut kicked = false;
+                    let mut kick_frame = 0;
+                    for frame in 0..900 {
+                        let yaw = if !kicked {
+                            -(face - g.p.x).atan2(10.0)
+                        } else {
+                            -(to.x - g.p.x).atan2((g.p.z - to.z).max(1.0))
+                        };
+                        let kick = g.wall_running && !kicked && g.p.z - to.z < kick_distance;
+                        let jump =
+                            frame == 24 || kick || (kicked && frame == kick_frame + double_delay);
+                        if kick {
+                            kicked = true;
+                            kick_frame = frame;
+                        }
+                        g.step(1.0 / 120.0, 1.0, 0.0, yaw, jump, false, false);
+                        if kicked && g.grounded {
+                            reached = (g.p.y - to.h).abs() < 0.001 && g.used_wall && g.used_jump;
+                            break;
+                        }
+                    }
+                    if reached {
+                        break;
+                    }
+                }
+                if reached {
+                    break;
+                }
+            }
+            assert!(reached, "combined gap {segment}");
+        }
+    }
+    #[test]
+    fn combined_finish_requires_both_skills() {
+        for (wall, jump, expected) in [
+            (false, false, 3),
+            (true, false, 3),
+            (false, true, 3),
+            (true, true, 4),
+        ] {
+            let mut g = Game::new(1);
+            g.playground = 6;
+            g.used_wall = wall;
+            g.used_jump = jump;
+            let finish = BLOCKS[47];
+            g.p = V::new(finish.x, finish.h + 0.1, finish.z);
+            g.v.y = -5.0;
+            g.grounded = false;
+            run(&mut g, 0.1, 0.0, 0.0);
+            assert_eq!(g.course_progress, expected);
+        }
+    }
+    #[test]
+    fn wall_runs_work_on_both_faces_and_have_a_time_limit() {
+        let mut g = Game::new(1);
+        g.p = V::new(66.82, 6.0, 115.0);
+        g.grounded = false;
+        g.coyote = 0.0;
+        g.v.z = -18.0;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+        assert!(g.wall_running);
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, true, false, false);
+        assert!(g.v.x > 7.0);
+        g.wall_lock = 0.0;
+        g.wall_time = 3.4;
+        g.v.z = -18.0;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
+        assert!(!g.wall_running);
     }
     #[test]
     fn movement_presets_produce_distinct_speed_and_jump_arcs() {
@@ -1240,13 +1766,30 @@ mod tests {
     }
     #[test]
     fn floating_platforms_support_landings_and_allow_walking_underneath() {
-        for (index, b) in BLOCKS.into_iter().enumerate().skip(5) {
+        for (index, b) in BLOCKS
+            .into_iter()
+            .enumerate()
+            .skip(5)
+            .filter(|(i, _)| !WALLS[*i])
+        {
+            let group = GROUPS[index] as usize;
             let mut g = Game::new(1);
+            g.playground = group;
+            g.used_wall = true;
+            g.used_jump = true;
             g.p = V::new(b.x, b.h + 1.0, b.z);
             g.v.y = -10.0;
             run(&mut g, 0.2, 0.0, 0.0);
             assert!(g.grounded && (g.p.y - b.h).abs() < 0.001);
-            assert_eq!(g.course_progress, index - 4);
+            assert_eq!(
+                g.course_progress,
+                BLOCKS
+                    .iter()
+                    .enumerate()
+                    .take(index + 1)
+                    .filter(|(i, _)| GROUPS[*i] == group as i32 && !WALLS[*i])
+                    .count()
+            );
         }
         let mut g = Game::new(1);
         let b = BLOCKS[8];
