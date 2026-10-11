@@ -540,6 +540,7 @@ struct Game {
     grounded: bool,
     landing_grip: f32,
     movement_preset: usize,
+    physics_mode: usize,
     course_progress: usize,
     playground: usize,
     wall_running: bool,
@@ -554,6 +555,7 @@ struct Game {
     dash_cd: f32,
     dash_time: f32,
     attack_cd: f32,
+    bat_origin: Option<V>,
     bodies: [Body; COUNT],
     score: u32,
     hits: u32,
@@ -611,6 +613,7 @@ impl Game {
             grounded: true,
             landing_grip: 0.0,
             movement_preset: 0,
+            physics_mode: 0,
             course_progress: 0,
             playground: 0,
             wall_running: false,
@@ -625,6 +628,7 @@ impl Game {
             dash_cd: 0.0,
             dash_time: 0.0,
             attack_cd: 0.0,
+            bat_origin: None,
             bodies,
             score: 0,
             hits: 0,
@@ -790,7 +794,15 @@ impl Game {
             self.jump_buffer = 0.0;
             self.dash_time = 0.0;
         } else if self.jump_buffer > 0.0 && self.coyote > 0.0 {
-            self.v.y = tuning.jump;
+            // A well-timed jump out of a fast landing releases a little extra
+            // compression. It depends on momentum and timing, never a dice roll.
+            let pop = if self.physics_mode > 0 && self.landing_grip > 0.0 {
+                ((self.v.x.hypot(self.v.z) - 20.0).max(0.0) * 0.22)
+                    .min(2.4 * self.physics_mode as f32)
+            } else {
+                0.0
+            };
+            self.v.y = tuning.jump + pop;
             self.grounded = false;
             self.coyote = 0.0;
             self.jump_buffer = 0.0;
@@ -899,7 +911,7 @@ impl Game {
                 }
                 body.p = body.home;
                 body.v = V::default();
-                body.health = if body.kind == 0 { 50.0 } else { 20.0 };
+                body.health = body_max_health(body.kind, self.physics_mode);
                 body.last_shot = 0;
                 previous_bodies[i] = body.p;
             }
@@ -919,18 +931,19 @@ impl Game {
             body.v.y -= 18.0 * wdt;
             body.v = body
                 .v
-                .scale((-(if body.kind == 0 { 0.32 } else { 0.8 }) * wdt).exp());
+                .scale((-(if self.physics_mode == 0 { 0.32 } else { 0.12 }) * wdt).exp());
             body.p = body.p.add(body.v.scale(wdt));
             if body.p.y < body.r {
                 body.p.y = body.r;
                 if body.v.y < 0.0 {
-                    body.v.y *= -0.25;
+                    body.v.y *= -body_bounce(self.physics_mode);
                 }
-                if body.v.y.abs() < 0.4 {
+                if body.v.y.abs() < 0.8 {
                     body.v.y = 0.0;
                 }
-                body.v.x *= (-6.0 * wdt).exp();
-                body.v.z *= (-6.0 * wdt).exp();
+                let friction = if self.physics_mode == 0 { 6.0 } else { 2.2 };
+                body.v.x *= (-friction * wdt).exp();
+                body.v.z *= (-friction * wdt).exp();
             }
             for b in BLOCKS {
                 if body.p.y - body.r < b.h
@@ -940,12 +953,38 @@ impl Game {
                 {
                     if old.y - body.r >= b.h - 0.02 && body.v.y < 0.0 {
                         body.p.y = b.h + body.r;
-                        body.v.y *= -0.25;
+                        body.v.y *= -body_bounce(self.physics_mode);
                     } else if old.y + body.r <= b.base && body.v.y > 0.0 {
                         body.p.y = b.base - body.r;
-                        body.v.y *= -0.25;
+                        body.v.y *= -body_bounce(self.physics_mode);
                     } else {
+                        let incoming = body.v;
                         push_box(&mut body.p, &mut body.v, b, body.r, true);
+                        if self.physics_mode > 0 {
+                            let hit_x = (incoming.x - body.v.x).abs() > 0.001;
+                            let normal = if hit_x {
+                                incoming.x.abs()
+                            } else {
+                                incoming.z.abs()
+                            };
+                            let tangent = if hit_x {
+                                incoming.z.abs()
+                            } else {
+                                incoming.x.abs()
+                            };
+                            if hit_x {
+                                body.v.x = -incoming.x * body_bounce(self.physics_mode);
+                            } else {
+                                body.v.z = -incoming.z * body_bounce(self.physics_mode);
+                            }
+                            // A glancing edge contact redirects some horizontal
+                            // energy upward. Head-on bumps remain ordinary rebounds.
+                            if normal > 6.0 && tangent > 4.0 {
+                                let lift = (normal * 0.35 + tangent * 0.22)
+                                    .min(16.0 * self.physics_mode as f32);
+                                body.v.y = body.v.y.max(lift);
+                            }
+                        }
                     }
                 }
             }
@@ -958,7 +997,7 @@ impl Game {
                 let edge = (if axis == 0 { HALF_WIDTH } else { HALF_LENGTH }) - 0.3 - body.r;
                 if p.abs() > edge {
                     *p = p.clamp(-edge, edge);
-                    *v *= -0.7;
+                    *v *= -if self.physics_mode == 0 { 0.7 } else { 0.9 };
                 }
             }
             if body.p.y > 0.0
@@ -967,6 +1006,13 @@ impl Game {
             {
                 let delta = V::new(body.p.x - self.p.x, 0.0, body.p.z - self.p.z).unit();
                 body.v = body.v.add(delta.scale(8.0 * wdt));
+                if self.physics_mode > 0 {
+                    let closing = self.v.sub(body.v).dot(delta).max(0.0);
+                    body.v = body.v.add(delta.scale(closing * 0.6));
+                    if closing > 10.0 {
+                        body.v.y = body.v.y.max(closing * 0.25 * self.physics_mode as f32);
+                    }
+                }
             }
         }
         // Axis-aligned block contacts match the simple visible crate geometry.
@@ -1008,11 +1054,34 @@ impl Game {
                     self.bodies[b].p = self.bodies[b].p.add(push);
                     let closing = self.bodies[b].v.sub(self.bodies[a].v).dot(n);
                     if closing < 0.0 {
-                        let impulse = n.scale(-closing * 0.65);
+                        let restitution = if self.physics_mode == 0 { 0.65 } else { 0.95 };
+                        let impulse = n.scale(-closing * restitution);
                         self.bodies[a].v = self.bodies[a].v.sub(impulse);
                         self.bodies[b].v = self.bodies[b].v.add(impulse);
+                        if self.physics_mode > 0 && n.y == 0.0 && closing < -8.0 {
+                            // Uneven side contacts can pop the higher block up;
+                            // an exactly level impact exchanges sideways momentum.
+                            let height_offset = delta.y.abs() / radius;
+                            if height_offset > 0.12 {
+                                let lift = (-closing * height_offset * 0.8)
+                                    .min(22.0 * self.physics_mode as f32);
+                                let higher = if delta.y >= 0.0 { b } else { a };
+                                self.bodies[higher].v.y = self.bodies[higher].v.y.max(lift);
+                            }
+                        }
                     }
                 }
+            }
+        }
+        if self.physics_mode > 0 {
+            // Bound stacked impacts while keeping strong, reproducible launches.
+            for b in &mut self.bodies {
+                let limit = 70.0 + 20.0 * self.physics_mode as f32;
+                if b.v.length() > limit {
+                    b.v = b.v.unit().scale(limit);
+                }
+                b.v.y = b.v.y.clamp(-50.0, 35.0 + self.physics_mode as f32 * 8.0);
+                b.p.y = b.p.y.max(b.r);
             }
         }
         self.step_pellets(dt, previous_bodies);
@@ -1065,6 +1134,10 @@ impl Game {
                 let strength = 5.0 * (0.2 + 0.8 * (1.0 - self.pellets[n].travel / 9.0));
                 let b = &mut self.bodies[i];
                 b.v = b.v.add(pellet.dir.scale(strength));
+                if self.physics_mode > 0 && b.kind == 0 {
+                    b.v =
+                        b.v.add(pellet.dir.scale(strength * 0.65 * self.physics_mode as f32));
+                }
                 b.glow = 1.0;
                 b.health =
                     (b.health - 8.0 * (0.2 + 0.8 * (1.0 - self.pellets[n].travel / 9.0))).max(0.0);
@@ -1075,6 +1148,9 @@ impl Game {
                 let new_hit = b.last_shot != pellet.shot;
                 if new_hit {
                     b.v.y += 1.2;
+                    if self.physics_mode > 0 && b.kind == 0 {
+                        b.v.y += 2.5 * self.physics_mode as f32;
+                    }
                     b.last_shot = pellet.shot;
                 }
                 self.last_hit = i as i32;
@@ -1103,23 +1179,44 @@ impl Game {
             -yaw.cos() * pitch.cos(),
         );
         if weapon == 0 {
+            let start = self.bat_origin.take().unwrap_or(eye);
+            let path = eye.sub(start);
+            let length_squared = path.dot(path);
             let mut count = 0;
             for (i, b) in self.bodies.iter_mut().enumerate() {
                 if b.health <= 0.0 {
                     continue;
                 }
-                let delta = b.p.sub(eye);
+                // Sweep the melee reach through the player's movement since
+                // wind-up. A fast run must not skip a block between frames.
+                let fraction = if length_squared > 0.0001 {
+                    b.p.sub(dir.scale(1.8)).sub(start).dot(path) / length_squared
+                } else {
+                    1.0
+                };
+                let origin = start.add(path.scale(fraction.clamp(0.0, 1.0)));
+                let delta = b.p.sub(origin);
                 let dist = delta.length();
                 if dist < 3.7 + b.r
                     && delta.unit().dot(dir) > 0.62
                     && BLOCKS
                         .iter()
-                        .all(|block| ray_box(eye, delta.unit(), *block) > dist - b.r)
+                        .all(|block| ray_box(origin, delta.unit(), *block) > dist - b.r)
                 {
                     // A driving sideways strike: forward power, modest lift, carried momentum.
                     let carry = b.v.scale(0.2).add(self.v.scale(0.45));
                     b.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(32.0).add(carry);
                     b.v.y = 3.2 + pitch.max(0.0) * 16.0 + self.v.y.max(0.0) * 0.2;
+                    if self.physics_mode > 0 && b.kind == 0 {
+                        let factor = self.physics_mode as f32;
+                        let speed = self.v.x.hypot(self.v.z);
+                        let sideways = delta.dot(V::new(yaw.cos(), 0.0, -yaw.sin())) / b.r;
+                        b.v = b.v.add(
+                            V::new(yaw.cos(), 0.0, -yaw.sin())
+                                .scale(sideways.clamp(-1.0, 1.0) * 7.0 * factor),
+                        );
+                        b.v.y += (2.5 + speed * 0.32 + carry.y.max(0.0) * 0.7) * factor;
+                    }
                     b.glow = 1.0;
                     b.health = (b.health
                         - 50.0
@@ -1210,6 +1307,18 @@ impl Game {
         }
     }
 }
+fn body_max_health(kind: u32, physics_mode: usize) -> f32 {
+    if kind == 1 {
+        20.0
+    } else if physics_mode == 0 {
+        50.0
+    } else {
+        220.0
+    }
+}
+fn body_bounce(physics_mode: usize) -> f32 {
+    [0.25, 0.62, 0.82][physics_mode]
+}
 fn body_bounds(body: Body, p: V) -> Block {
     Block {
         x: p.x,
@@ -1263,8 +1372,13 @@ thread_local! {static GAME:RefCell<Game>=RefCell::new(Game::new(1));static BUFFE
 pub extern "C" fn reset(seed: u32) {
     GAME.with(|g| {
         let preset = g.borrow().movement_preset;
+        let physics = g.borrow().physics_mode;
         let mut fresh = Game::new(seed);
         fresh.movement_preset = preset;
+        fresh.physics_mode = physics;
+        for body in &mut fresh.bodies {
+            body.health = body_max_health(body.kind, physics);
+        }
         *g.borrow_mut() = fresh;
     });
 }
@@ -1286,6 +1400,17 @@ pub extern "C" fn tick(
 #[no_mangle]
 pub extern "C" fn attack(yaw: f32, pitch: f32, weapon: u32) -> i32 {
     GAME.with(|g| g.borrow_mut().attack(yaw, pitch, weapon))
+}
+#[no_mangle]
+pub extern "C" fn begin_bat_swing() {
+    GAME.with(|g| {
+        let mut g = g.borrow_mut();
+        g.bat_origin = Some(g.p.add(V::new(0.0, 1.65, 0.0)));
+    });
+}
+#[no_mangle]
+pub extern "C" fn cancel_bat_swing() {
+    GAME.with(|g| g.borrow_mut().bat_origin = None);
 }
 #[no_mangle]
 pub extern "C" fn snapshot_ptr() -> *const f32 {
@@ -1348,6 +1473,36 @@ pub extern "C" fn set_movement_preset(index: usize) {
 #[no_mangle]
 pub extern "C" fn movement_preset() -> usize {
     GAME.with(|g| g.borrow().movement_preset)
+}
+#[no_mangle]
+pub extern "C" fn set_physics_mode(index: usize) {
+    GAME.with(|g| {
+        let mut g = g.borrow_mut();
+        g.physics_mode = index.min(2);
+        let mode = g.physics_mode;
+        for b in &mut g.bodies {
+            b.p = b.home;
+            b.v = V::default();
+            b.health = body_max_health(b.kind, mode);
+            b.respawn = 0.0;
+            b.last_shot = 0;
+        }
+        g.pellets.fill(Pellet::default());
+    });
+}
+#[no_mangle]
+pub extern "C" fn physics_mode() -> usize {
+    GAME.with(|g| g.borrow().physics_mode)
+}
+#[no_mangle]
+pub extern "C" fn max_body_health(index: usize) -> f32 {
+    GAME.with(|g| {
+        let g = g.borrow();
+        g.bodies
+            .get(index)
+            .map(|b| body_max_health(b.kind, g.physics_mode))
+            .unwrap_or(0.0)
+    })
 }
 #[no_mangle]
 pub extern "C" fn course_progress() -> usize {
@@ -2050,5 +2205,142 @@ mod tests {
         for b in g.bodies {
             assert!(b.p.x.is_finite() && b.p.y.is_finite() && b.p.z.is_finite());
         }
+    }
+    #[test]
+    fn playful_running_hits_launch_durable_blocks_without_randomness() {
+        let mut standing = Game::new(1);
+        standing.physics_mode = 1;
+        standing.bodies[0].health = 220.0;
+        let mut running = Game::new(1);
+        running.physics_mode = 1;
+        running.bodies[0].health = 220.0;
+        running.v.z = -30.0;
+        assert_eq!(standing.attack(0.0, -0.14, 0), 1);
+        assert_eq!(running.attack(0.0, -0.14, 0), 1);
+        assert!(standing.bodies[0].health > 0.0 && running.bodies[0].health > 0.0);
+        assert!(running.bodies[0].v.y > standing.bodies[0].v.y + 9.0);
+        assert!(running.bodies[0].v.z < standing.bodies[0].v.z - 12.0);
+        run(&mut running, 0.4, 0.0, 0.0);
+        assert!(running.bodies[0].p.y > 4.0);
+    }
+    #[test]
+    fn bat_sweep_hits_a_block_passed_at_dash_speed_but_respects_walls() {
+        let mut g = Game::new(1);
+        g.bat_origin = Some(g.p.add(V::new(0.0, 1.65, 0.0)));
+        g.p.z = 6.4;
+        g.v.z = -30.0;
+        assert_eq!(g.attack(0.0, -0.14, 0), 1);
+        assert!(g.bat_origin.is_none());
+        let mut blocked = Game::new(1);
+        blocked.bat_origin = Some(V::new(0.0, 1.65, -11.0));
+        blocked.p = V::new(0.0, 0.0, -11.65);
+        // The block is in range, but the solid slab at z=-13 blocks the arc.
+        blocked.bodies[0].p = V::new(0.0, 0.6, -14.6);
+        assert_eq!(blocked.attack(0.0, -0.14, 0), 0);
+    }
+    #[test]
+    fn off_center_bat_hits_curve_in_the_direction_of_the_contact() {
+        for offset in [-0.4, 0.4] {
+            let mut g = Game::new(1);
+            g.physics_mode = 1;
+            g.bodies[0].p.x = offset;
+            g.bodies[0].health = 220.0;
+            assert_eq!(g.attack(0.0, -0.14, 0), 1);
+            assert!(g.bodies[0].v.x * offset > 1.0);
+        }
+    }
+    #[test]
+    fn glancing_static_collisions_pop_but_head_on_collisions_do_not() {
+        for tangent in [0.0, 15.0] {
+            let mut g = Game::new(1);
+            g.physics_mode = 1;
+            g.bodies[0].health = 220.0;
+            g.bodies[0].p = V::new(-6.0, 0.6, 2.65);
+            g.bodies[0].v = V::new(tangent, 0.0, -25.0);
+            g.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
+            assert!(g.bodies[0].v.z > 10.0);
+            if tangent > 0.0 {
+                assert!(g.bodies[0].v.y > 10.0);
+            } else {
+                assert!(g.bodies[0].v.y < 1.0);
+            }
+        }
+    }
+    #[test]
+    fn uneven_block_contacts_launch_the_higher_block() {
+        let mut g = Game::new(1);
+        g.physics_mode = 1;
+        g.bodies[0].p = V::new(15.0, 0.6, 20.0);
+        g.bodies[1].p = V::new(16.18, 1.1, 20.0);
+        g.bodies[0].v = V::new(30.0, 0.0, 0.0);
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
+        assert!(g.bodies[1].v.x > 20.0 && g.bodies[1].v.y > 8.0);
+        assert!(g.bodies[0].v.y < 1.0);
+    }
+    #[test]
+    fn playful_rebuild_and_mode_switch_preserve_the_selected_physics() {
+        set_physics_mode(2);
+        reset(99);
+        assert_eq!(physics_mode(), 2);
+        assert_eq!(max_body_health(0), 220.0);
+        assert_eq!(max_body_health(6), 20.0);
+        set_physics_mode(0);
+        assert_eq!(max_body_health(0), 50.0);
+        let mut g = Game::new(1);
+        g.physics_mode = 1;
+        g.bodies[0].health = 0.0;
+        g.bodies[0].respawn = 0.1;
+        run(&mut g, 0.15, 0.0, 0.0);
+        assert_eq!(g.bodies[0].health, 220.0);
+    }
+    #[test]
+    fn fast_timed_landing_jump_adds_pop_but_idle_jump_does_not() {
+        let mut g = Game::new(1);
+        g.physics_mode = 1;
+        g.p = V::new(-50.0, 0.0, 70.0);
+        g.landing_grip = 0.1;
+        g.v.z = -30.0;
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, true, false, false);
+        assert!(g.v.y > 12.0);
+        let mut idle = Game::new(1);
+        idle.physics_mode = 1;
+        idle.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        assert!(idle.v.y < 10.5);
+    }
+    #[test]
+    fn wild_stacked_impulses_stay_bounded_and_reproducible() {
+        fn simulate() -> [f32; SNAPSHOT] {
+            let mut g = Game::new(1);
+            g.physics_mode = 2;
+            for b in &mut g.bodies {
+                b.health = body_max_health(b.kind, 2);
+            }
+            for i in 0..6000 {
+                if i % 180 == 0 {
+                    g.bodies[0].v = V::new(800.0, 300.0, 400.0);
+                }
+                g.step(
+                    1.0 / 120.0,
+                    1.0,
+                    0.5,
+                    i as f32 * 0.02,
+                    i % 90 == 0,
+                    i % 80 == 0,
+                    i % 400 < 120,
+                );
+                if i % 60 == 0 {
+                    g.attack(i as f32 * 0.02, 0.1, 0);
+                }
+                for b in &g.bodies {
+                    assert!(b.v.length() < 110.01 && b.p.y >= b.r);
+                }
+            }
+            let mut out = [0.0; SNAPSHOT];
+            g.snapshot(&mut out);
+            out
+        }
+        let a = simulate();
+        assert_eq!(a, simulate());
+        assert!(a.into_iter().all(f32::is_finite));
     }
 }

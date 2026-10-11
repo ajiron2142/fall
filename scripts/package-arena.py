@@ -2,7 +2,7 @@
 from pathlib import Path
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 root=Path(__file__).resolve().parents[1]
-files=['bat-preview.html','arena/bat-preview.css','arena/bat-preview.mjs','index.html','arena.html','afterlight.html','lab.html','style.css','game.js','echo.css','echo.js','worlds.css','worlds.mjs','puzzles.mjs','manifest.webmanifest','arena/style.css','arena/game.mjs','arena/core.wasm','vendor/three.module.js','vendor/THREE-LICENSE.txt','arena-core/Cargo.toml','arena-core/Cargo.lock','arena-core/src/lib.rs']
+files=['arena/bat-viewmodel.mjs','bat-preview.html','arena/bat-preview.css','arena/bat-preview.mjs','index.html','arena.html','afterlight.html','lab.html','style.css','game.js','echo.css','echo.js','worlds.css','worlds.mjs','puzzles.mjs','manifest.webmanifest','arena/style.css','arena/game.mjs','arena/core.wasm','vendor/three.module.js','vendor/THREE-LICENSE.txt','arena-core/Cargo.toml','arena-core/Cargo.lock','arena-core/src/lib.rs']
 instructions='''IMPACT — browser movement and weapon demo
 
 This is a browser build, not a native desktop executable.
@@ -14,7 +14,7 @@ This is a browser build, not a native desktop executable.
 Do not open arena.html through file://; browsers restrict WASM loading that way.
 Everything runs locally. No account, backend, or runtime CDN is required.
 
-WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse wheel weapon, R course, T range, E bullet time.
+WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse wheel weapon, R course, T range, E bullet time, B cycle bat style.
 Touch controls default off; enable them in settings (saved on this device).
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
@@ -30,6 +30,13 @@ Jump routes are checked at 24 and 30 m/s. Select sections in Pause; R restarts.
 Move alongside glowing walls while airborne to wall-run; Jump kicks away.
 Wall-only sections need no jumps; only the combined section requires both skills.
 The arena is 160 x 320 metres. Runway starts a clear 280-metre sprint lane.
+
+Pause: compare Low sweep / Sidearm whip / Short snap bat animations.
+The bat and right arm keep the center of the screen clear, including during swings.
+Physics: Playful by default; Classic / Playful / Wild are saved per device.
+Playful/Wild blocks survive several hits, carry momentum and ricochet. Running
+bat hits add lift; off-center hits deflect sideways; glancing collisions pop up.
+Fast landing jumps get extra height. Select Classic for the original breaking range.
 
 Range: smash blocks and shoot square targets; one target moves horizontally.
 Damage bars, cube fragments, automatic rebuilding after 3 seconds of world time.

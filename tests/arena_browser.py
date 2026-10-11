@@ -16,6 +16,8 @@ try:
   page=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
   errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(base+'/arena.html');page.wait_for_function('window.impactState && impactState().ready && impactState().drawCalls>0')
+  assert page.evaluate('impactState().physicsMode')==1
+  page.locator('#physics-0').tap()
   assert page.evaluate('impactState().weapon')=='shotgun'
   assert page.locator('#controls').is_hidden()
   page.locator('#touch-controls').tap()
