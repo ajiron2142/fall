@@ -16,7 +16,8 @@ try:
   page=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
   errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(base+'/arena.html');page.wait_for_function('window.impactState && impactState().ready && impactState().drawCalls>0')
-  page.locator('#start').tap();
+  assert page.evaluate('impactState().weapon')=='shotgun'
+  page.locator('#start').tap();page.locator('#weapon').tap();
   initial=page.evaluate('''()=>{const before=impactState().shots;document.getElementById('fire').dispatchEvent(new MouseEvent('click',{detail:0}));return {before,after:impactState().shots,pending:impactState().batPending};}''');assert initial['before']==initial['after'] and initial['pending'],initial
   page.wait_for_function('impactState().hits>0');assert page.evaluate('impactState().bodies[0].vz')< -15
   page.wait_for_timeout(500)
@@ -46,7 +47,7 @@ try:
   page.wait_for_function('Math.abs(impactState().player.vz)>20')
   cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
   page.locator('#slow').tap();assert page.evaluate('impactState().slow');page.locator('#slow').tap();assert not page.evaluate('impactState().slow')
-  page.locator('#weapon').tap();assert page.evaluate('impactState().weapon')=='shotgun'
+  assert page.evaluate('impactState().weapon')=='shotgun'
   page.locator('#pause').tap();assert not page.evaluate('impactState().running')
   page.locator('#reset').tap();page.locator('#start').tap();page.locator('#slow').tap();page.locator('#fire').tap()
   page.wait_for_function('impactState().projectiles.length>0 && impactState().hits===0')
@@ -68,10 +69,19 @@ try:
   cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
   page.set_viewport_size({'width':844,'height':390});page.wait_for_timeout(300)
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-  desktop=browser.new_page(viewport={'width':1280,'height':800});desktop.on('pageerror',lambda e:errors.append(str(e)));desktop.goto(base+'/arena.html');desktop.wait_for_function('window.impactState && impactState().ready');desktop.locator('#start').click();desktop.mouse.down();desktop.mouse.up();desktop.wait_for_function('impactState().hits>0')
+  desktop=browser.new_page(viewport={'width':1280,'height':800});desktop.on('pageerror',lambda e:errors.append(str(e)));desktop.goto(base+'/arena.html');desktop.wait_for_function('window.impactState && impactState().ready');assert desktop.evaluate('impactState().weapon')=='shotgun';desktop.locator('#start').click();desktop.mouse.down();desktop.mouse.up();desktop.wait_for_function('impactState().hits>0')
   desktop.evaluate('''()=>{window.walkSamples=[];const sample=()=>{const s=impactState();walkSamples.push(s.camera.y-s.player.y);if(walkSamples.length<12)requestAnimationFrame(sample);};requestAnimationFrame(sample);}''');desktop.keyboard.down('KeyW');desktop.wait_for_function('walkSamples.length>=12 && impactState().player.z<9');assert desktop.evaluate('walkSamples.every(y=>Math.abs(y-1.65)<.00001)'),desktop.evaluate('walkSamples');desktop.keyboard.press('Space');desktop.wait_for_function('impactState().player.y>.8 && impactState().player.vz < -5');desktop.keyboard.up('KeyW');desktop.wait_for_function('!impactState().grounded && impactState().player.vy<0');desktop.keyboard.press('Space');desktop.wait_for_function('!impactState().airJumpAvailable && impactState().player.vy>4');desktop.keyboard.press('KeyQ');assert desktop.evaluate('impactState().weapon')=='bat';desktop.mouse.wheel(0,120);desktop.wait_for_function("impactState().weapon==='shotgun'");desktop.keyboard.press('KeyE');assert desktop.evaluate('impactState().slow');desktop.evaluate('''()=>{window.hoverSamples=[];const sample=()=>{hoverSamples.push(impactState().player.y);if(hoverSamples.length<8)requestAnimationFrame(sample);};requestAnimationFrame(sample);}''');desktop.wait_for_function('hoverSamples.length===8');assert desktop.evaluate('Math.abs(hoverSamples[7]-hoverSamples[0])<.35 && !impactState().grounded');desktop.screenshot(path='/tmp/impact-desktop.png')
   desktop.keyboard.press('Escape');desktop.wait_for_function('!impactState().running')
+  page.locator('#pause').tap()
+  for preset in range(3):
+   page.locator('#preset-'+str(preset)).tap();state=page.evaluate('impactState()')
+   assert state['movementPreset']==preset and state['courseProgress']==1 and state['player']['y']==state['obstacles'][5]['h']
+   assert page.locator('#preset-'+str(preset)).get_attribute('aria-pressed')=='true'
+  page.locator('#start').tap();page.locator('#jump').tap();page.wait_for_function('impactState().player.y>1.4')
+  page.locator('#course').tap();assert page.evaluate('impactState().courseProgress')==1
+  page.locator('#pause').tap();page.reload();page.wait_for_function('window.impactState && impactState().ready');assert page.evaluate('impactState().movementPreset')==2
+  page.locator('#preset-0').tap();page.locator('#start').tap();page.screenshot(path='/tmp/impact-course-mobile.png')
   assert not errors,errors
-  print('Passed real WASM loading, bat launch and shotgun hit, simultaneous touch movement/jump/dash, bullet-time airborne suspension and delayed pellet hits after resume, pause/reset, fullscreen, touch aiming, landscape, desktop mouse attack, stable walking camera, touch/keyboard double jumps and FPS counter, mouse wheel switching and removed Q shortcut; no browser errors.')
+  print('Passed real WASM loading, bat launch and shotgun hit, simultaneous touch movement/jump/dash, bullet-time airborne suspension and delayed pellet hits after resume, pause/reset, fullscreen, touch aiming, landscape, desktop mouse attack, stable walking camera, touch/keyboard double jumps and FPS counter, mouse wheel switching and restored Q shortcut, default shotgun, three saved movement presets and floating course; no browser errors.')
   browser.close()
 finally:server.shutdown();server.server_close()

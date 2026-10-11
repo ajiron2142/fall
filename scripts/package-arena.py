@@ -14,9 +14,11 @@ This is a browser build, not a native desktop executable.
 Do not open arena.html through file://; browsers restrict WASM loading that way.
 Everything runs locally. No account, backend, or runtime CDN is required.
 
-WASD + mouse, click to attack, Space jump/double jump, Shift dash, mouse wheel weapon, E bullet time.
+WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse wheel weapon, R course, E bullet time.
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
+Choose Snappy, Momentum, or Floaty movement in Pause; each starts the same course.
+The shotgun is equipped by default. Course / R restarts at platform 01.
 
 The Rust core handles movement, collisions, bat impulses, travelling shotgun pellets,
 object simulation, slow motion, and scoring. Three.js handles rendering;

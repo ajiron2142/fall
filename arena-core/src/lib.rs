@@ -45,14 +45,16 @@ struct Block {
     w: f32,
     d: f32,
     h: f32,
+    base: f32,
 }
-const BLOCKS: [Block; 5] = [
+const BLOCKS: [Block; 15] = [
     Block {
         x: -6.0,
         z: 0.0,
         w: 4.0,
         d: 4.0,
         h: 1.3,
+        base: 0.0,
     },
     Block {
         x: 6.0,
@@ -60,6 +62,7 @@ const BLOCKS: [Block; 5] = [
         w: 4.0,
         d: 4.0,
         h: 2.0,
+        base: 0.0,
     },
     Block {
         x: -11.0,
@@ -67,6 +70,7 @@ const BLOCKS: [Block; 5] = [
         w: 3.0,
         d: 6.0,
         h: 2.8,
+        base: 0.0,
     },
     Block {
         x: 0.0,
@@ -74,6 +78,7 @@ const BLOCKS: [Block; 5] = [
         w: 7.0,
         d: 2.0,
         h: 0.9,
+        base: 0.0,
     },
     Block {
         x: 11.0,
@@ -81,6 +86,130 @@ const BLOCKS: [Block; 5] = [
         w: 4.0,
         d: 4.0,
         h: 1.1,
+        base: 0.0,
+    },
+    Block {
+        x: 18.0,
+        z: 9.0,
+        w: 5.0,
+        d: 5.0,
+        h: 0.8,
+        base: 0.35,
+    },
+    Block {
+        x: 25.0,
+        z: 5.0,
+        w: 5.0,
+        d: 5.0,
+        h: 2.0,
+        base: 1.55,
+    },
+    Block {
+        x: 29.0,
+        z: -3.0,
+        w: 4.0,
+        d: 4.0,
+        h: 3.4,
+        base: 2.95,
+    },
+    Block {
+        x: 24.0,
+        z: -10.0,
+        w: 4.0,
+        d: 4.0,
+        h: 4.8,
+        base: 4.35,
+    },
+    Block {
+        x: 29.0,
+        z: -18.0,
+        w: 4.0,
+        d: 4.0,
+        h: 6.2,
+        base: 5.75,
+    },
+    Block {
+        x: 20.0,
+        z: -24.0,
+        w: 5.0,
+        d: 5.0,
+        h: 7.4,
+        base: 6.95,
+    },
+    Block {
+        x: 11.0,
+        z: -27.0,
+        w: 4.0,
+        d: 4.0,
+        h: 8.7,
+        base: 8.25,
+    },
+    Block {
+        x: 2.0,
+        z: -27.0,
+        w: 5.0,
+        d: 5.0,
+        h: 10.0,
+        base: 9.55,
+    },
+    Block {
+        x: -8.0,
+        z: -26.0,
+        w: 5.0,
+        d: 5.0,
+        h: 11.2,
+        base: 10.75,
+    },
+    Block {
+        x: -18.0,
+        z: -25.0,
+        w: 8.0,
+        d: 6.0,
+        h: 12.0,
+        base: 11.55,
+    },
+];
+#[derive(Clone, Copy)]
+struct Movement {
+    speed: f32,
+    ground_accel: f32,
+    air_accel: f32,
+    gravity: f32,
+    jump: f32,
+    double_jump: f32,
+    dash: f32,
+    max_air_speed: f32,
+}
+const MOVEMENT: [Movement; 3] = [
+    Movement {
+        speed: 15.0,
+        ground_accel: 18.0,
+        air_accel: 32.0,
+        gravity: 25.0,
+        jump: 10.5,
+        double_jump: 9.8,
+        dash: 30.0,
+        max_air_speed: 32.0,
+    },
+    Movement {
+        speed: 18.0,
+        ground_accel: 7.0,
+        air_accel: 16.0,
+        gravity: 30.0,
+        jump: 11.7,
+        double_jump: 11.0,
+        dash: 34.0,
+        max_air_speed: 38.0,
+    },
+    Movement {
+        speed: 12.0,
+        ground_accel: 12.0,
+        air_accel: 65.0,
+        gravity: 15.0,
+        jump: 10.8,
+        double_jump: 10.0,
+        dash: 26.0,
+        max_air_speed: 30.0,
     },
 ];
 #[derive(Clone, Copy, Default)]
@@ -106,6 +235,8 @@ struct Game {
     p: V,
     v: V,
     grounded: bool,
+    movement_preset: usize,
+    course_progress: usize,
     coyote: f32,
     air_jump_available: bool,
     jump_buffer: f32,
@@ -166,6 +297,8 @@ impl Game {
             p: V::new(0.0, 0.0, 10.0),
             v: V::default(),
             grounded: true,
+            movement_preset: 0,
+            course_progress: 0,
             coyote: 0.14,
             air_jump_available: true,
             jump_buffer: 0.0,
@@ -225,6 +358,7 @@ impl Game {
             (self.jump_buffer - dt).max(0.0)
         };
         let pdt = dt;
+        let tuning = MOVEMENT[self.movement_preset];
         let f = if forward.is_finite() {
             forward.clamp(-1.0, 1.0)
         } else {
@@ -243,30 +377,31 @@ impl Game {
         );
         if self.dash_time <= 0.0 {
             if self.grounded {
-                let blend = 1.0 - (-18.0 * pdt).exp();
-                self.v.x += (wish.x * 15.0 - self.v.x) * blend;
-                self.v.z += (wish.z * 15.0 - self.v.z) * blend;
+                let blend = 1.0 - (-tuning.ground_accel * pdt).exp();
+                self.v.x += (wish.x * tuning.speed - self.v.x) * blend;
+                self.v.z += (wish.z * tuning.speed - self.v.z) * blend;
             } else if wish.length() > 0.01 {
                 // Accelerate along the requested direction without deleting jump momentum.
-                let remaining = (15.0 - self.v.dot(wish)).max(0.0);
-                let acceleration = remaining.min(32.0 * pdt);
-                self.v = self.v.add(wish.scale(acceleration));
+                let direction = wish.unit();
+                let remaining = (tuning.speed * wish.length() - self.v.dot(direction)).max(0.0);
+                let acceleration = remaining.min(tuning.air_accel * pdt);
+                self.v = self.v.add(direction.scale(acceleration));
                 let horizontal = (self.v.x * self.v.x + self.v.z * self.v.z).sqrt();
-                if horizontal > 32.0 {
-                    self.v.x *= 32.0 / horizontal;
-                    self.v.z *= 32.0 / horizontal;
+                if horizontal > tuning.max_air_speed {
+                    self.v.x *= tuning.max_air_speed / horizontal;
+                    self.v.z *= tuning.max_air_speed / horizontal;
                 }
             }
         }
         if self.jump_buffer > 0.0 && self.coyote > 0.0 {
-            self.v.y = 10.5;
+            self.v.y = tuning.jump;
             self.grounded = false;
             self.coyote = 0.0;
             self.jump_buffer = 0.0;
         } else if jump && self.air_jump_available {
             // Restart a slightly softer arc even while falling. Do not stack upward
             // velocity: timing changes the height, not the strength of the kick.
-            self.v.y = 9.8;
+            self.v.y = tuning.double_jump;
             self.air_jump_available = false;
             self.jump_buffer = 0.0;
         }
@@ -276,13 +411,13 @@ impl Game {
             } else {
                 V::new(-yaw.sin(), 0.0, -yaw.cos())
             };
-            self.v.x = dir.x * 30.0;
-            self.v.z = dir.z * 30.0;
+            self.v.x = dir.x * tuning.dash;
+            self.v.z = dir.z * tuning.dash;
             self.dash_time = 0.16;
             self.dash_cd = 0.55;
         }
         let old_y = self.p.y;
-        self.v.y -= 25.0 * pdt;
+        self.v.y -= tuning.gravity * pdt;
         self.p = self.p.add(self.v.scale(pdt));
         self.grounded = false;
         if self.p.y <= 0.0 {
@@ -290,7 +425,7 @@ impl Game {
             self.v.y = 0.0;
             self.grounded = true;
         }
-        for b in BLOCKS {
+        for (index, b) in BLOCKS.into_iter().enumerate() {
             if (self.p.x - b.x).abs() < b.w / 2.0 + 0.32
                 && (self.p.z - b.z).abs() < b.d / 2.0 + 0.32
             {
@@ -298,18 +433,24 @@ impl Game {
                     self.p.y = b.h;
                     self.v.y = 0.0;
                     self.grounded = true;
-                } else if self.p.y < b.h && self.p.y + 1.7 > 0.0 {
+                    if index >= 5 {
+                        self.course_progress = self.course_progress.max(index - 4);
+                    }
+                } else if old_y + 1.7 <= b.base && self.p.y + 1.7 >= b.base && self.v.y > 0.0 {
+                    self.p.y = b.base - 1.7;
+                    self.v.y = 0.0;
+                } else if self.p.y < b.h && self.p.y + 1.7 > b.base {
                     push_box(&mut self.p, &mut self.v, b, 0.32, false);
                 }
             }
         }
         for axis in [0, 2] {
-            if axis == 0 && self.p.x.abs() > 17.5 {
-                self.p.x = self.p.x.clamp(-17.5, 17.5);
+            if axis == 0 && self.p.x.abs() > 35.5 {
+                self.p.x = self.p.x.clamp(-35.5, 35.5);
                 self.v.x = 0.0;
             }
-            if axis == 2 && self.p.z.abs() > 17.5 {
-                self.p.z = self.p.z.clamp(-17.5, 17.5);
+            if axis == 2 && self.p.z.abs() > 35.5 {
+                self.p.z = self.p.z.clamp(-35.5, 35.5);
                 self.v.z = 0.0;
             }
         }
@@ -350,11 +491,15 @@ impl Game {
             }
             for b in BLOCKS {
                 if body.p.y - body.r < b.h
+                    && body.p.y + body.r > b.base
                     && (body.p.x - b.x).abs() < b.w / 2.0 + body.r
                     && (body.p.z - b.z).abs() < b.d / 2.0 + body.r
                 {
                     if old.y - body.r >= b.h - 0.02 && body.v.y < 0.0 {
                         body.p.y = b.h + body.r;
+                        body.v.y *= -0.55;
+                    } else if old.y + body.r <= b.base && body.v.y > 0.0 {
+                        body.p.y = b.base - body.r;
                         body.v.y *= -0.55;
                     } else {
                         push_box(&mut body.p, &mut body.v, b, body.r, true);
@@ -367,7 +512,7 @@ impl Game {
                 } else {
                     (&mut body.p.z, &mut body.v.z)
                 };
-                let edge = 17.7 - body.r;
+                let edge = 35.7 - body.r;
                 if p.abs() > edge {
                     *p = p.clamp(-edge, edge);
                     *v *= -0.7;
@@ -611,7 +756,7 @@ fn ray_box(origin: V, dir: V, b: Block) -> f32 {
     let mut far = 100.0_f32;
     for (o, d, min, max) in [
         (origin.x, dir.x, b.x - b.w / 2.0, b.x + b.w / 2.0),
-        (origin.y, dir.y, 0.0, b.h),
+        (origin.y, dir.y, b.base, b.h),
         (origin.z, dir.z, b.z - b.d / 2.0, b.z + b.d / 2.0),
     ] {
         if d.abs() < 0.00001 {
@@ -634,7 +779,12 @@ fn ray_box(origin: V, dir: V, b: Block) -> f32 {
 thread_local! {static GAME:RefCell<Game>=RefCell::new(Game::new(1));static BUFFER:RefCell<[f32;SNAPSHOT]>=const{RefCell::new([0.0;SNAPSHOT])};}
 #[no_mangle]
 pub extern "C" fn reset(seed: u32) {
-    GAME.with(|g| *g.borrow_mut() = Game::new(seed));
+    GAME.with(|g| {
+        let preset = g.borrow().movement_preset;
+        let mut fresh = Game::new(seed);
+        fresh.movement_preset = preset;
+        *g.borrow_mut() = fresh;
+    });
 }
 #[no_mangle]
 pub extern "C" fn tick(
@@ -710,6 +860,36 @@ pub extern "C" fn air_jump_available() -> u32 {
     GAME.with(|g| g.borrow().air_jump_available as u32)
 }
 #[no_mangle]
+pub extern "C" fn set_movement_preset(index: usize) {
+    GAME.with(|g| g.borrow_mut().movement_preset = index.min(2));
+}
+#[no_mangle]
+pub extern "C" fn movement_preset() -> usize {
+    GAME.with(|g| g.borrow().movement_preset)
+}
+#[no_mangle]
+pub extern "C" fn course_progress() -> usize {
+    GAME.with(|g| g.borrow().course_progress)
+}
+#[no_mangle]
+pub extern "C" fn start_course() {
+    GAME.with(|g| {
+        let mut g = g.borrow_mut();
+        let b = BLOCKS[5];
+        g.p = V::new(b.x, b.h, b.z);
+        g.v = V::default();
+        g.grounded = true;
+        g.air_jump_available = true;
+        g.coyote = 0.14;
+        g.jump_buffer = 0.0;
+        g.attack_cd = 0.0;
+        g.dash_cd = 0.0;
+        g.dash_time = 0.0;
+        g.course_progress = 1;
+        g.pellets.fill(Pellet::default());
+    });
+}
+#[no_mangle]
 pub extern "C" fn obstacle_count() -> usize {
     BLOCKS.len()
 }
@@ -723,6 +903,7 @@ pub extern "C" fn obstacle(index: usize, field: usize) -> f32 {
             2 => b.w,
             3 => b.d,
             4 => b.h,
+            5 => b.base,
             _ => 0.0,
         })
         .unwrap_or(0.0)
@@ -932,6 +1113,47 @@ mod tests {
         assert_eq!(g.hits, 0);
     }
     #[test]
+    fn movement_presets_produce_distinct_speed_and_jump_arcs() {
+        let mut speeds = [0.0; 3];
+        let mut airtimes = [0.0; 3];
+        for preset in 0..3 {
+            let mut g = Game::new(1);
+            g.movement_preset = preset;
+            g.p = V::new(-25.0, 0.0, 20.0);
+            run(&mut g, 0.5, 1.0, 0.0);
+            speeds[preset] = -g.v.z;
+            g.v = V::default();
+            g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+            while !g.grounded && airtimes[preset] < 3.0 {
+                run(&mut g, 1.0 / 120.0, 0.0, 0.0);
+                airtimes[preset] += 1.0 / 120.0;
+            }
+        }
+        assert!(speeds[1] > speeds[0] && speeds[0] > speeds[2]);
+        assert!(airtimes[2] > airtimes[0] * 1.6 && airtimes[2] > airtimes[1] * 1.6);
+    }
+    #[test]
+    fn floating_platforms_support_landings_and_allow_walking_underneath() {
+        for (index, b) in BLOCKS.into_iter().enumerate().skip(5) {
+            let mut g = Game::new(1);
+            g.p = V::new(b.x, b.h + 1.0, b.z);
+            g.v.y = -10.0;
+            run(&mut g, 0.2, 0.0, 0.0);
+            assert!(g.grounded && (g.p.y - b.h).abs() < 0.001);
+            assert_eq!(g.course_progress, index - 4);
+        }
+        let mut g = Game::new(1);
+        let b = BLOCKS[8];
+        g.p = V::new(b.x, 0.0, b.z);
+        run(&mut g, 0.1, 0.0, 0.0);
+        assert_eq!(g.p.x, b.x);
+        assert_eq!(g.p.z, b.z);
+        g.p.y = b.base - 1.75;
+        g.v.y = 10.0;
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
+        assert!((g.p.y + 1.7 - b.base).abs() < 0.001 && g.v.y == 0.0);
+    }
+    #[test]
     fn hoop_awards_points_when_ball_crosses_ring() {
         let mut g = Game::new(1);
         g.bodies[0].p = V::new(12.0, 2.6, -15.6);
@@ -968,7 +1190,7 @@ mod tests {
                 g.attack(i as f32 * 0.01, -0.2, 0);
             }
         }
-        assert!(g.p.x.abs() <= 17.5 && g.p.z.abs() <= 17.5);
+        assert!(g.p.x.abs() <= 35.5 && g.p.z.abs() <= 35.5);
         for b in g.bodies {
             assert!(b.p.x.is_finite() && b.p.y.is_finite() && b.p.z.is_finite());
         }
