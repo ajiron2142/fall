@@ -12,6 +12,16 @@ No build step, accounts, runtime CDN, or backend. Three.js 0.160.1 is bundled lo
 
 From this directory, run `python3 -m http.server 8000`, then open the site in a browser. Tap ⛶ for fullscreen on supported browsers. On iPhone, use Share → Add to Home Screen.
 
+## Impact — FPS feel test
+
+Open `arena.html` for a separate first-person arena with a bat and blaster. Switch weapons with Q or the on-screen pill. WASD/mouse moves and aims, click attacks, Space jumps, Shift dashes, and E toggles slow motion. Touch uses a move joystick, drag-to-look, and simultaneous action buttons; holding and dragging Swing/Fire combines aiming and attacking under one thumb. Aim assist defaults on for touch and is optional in the pause menu. Bat strikes launch objects; blaster shots use hitscan and impart smaller impulses. Launch objects through rings for bonus points. There are no enemies, health system, or multiplayer.
+
+`arena-core` is a dependency-free Rust library compiled to WebAssembly: movement, collisions, sphere contacts, attack rules, slow motion, and scoring live there. Three.js renders; browser JavaScript handles UI, input, audio, and effects. This is a gameplay experiment with a small Rust simulation, not a complete custom Rust engine. The core was built using Rust 1.99.0; it requires Rust >= 1.85.
+
+To rebuild, install Rust and `rustup target add wasm32-unknown-unknown`, then run `sh scripts/build-arena.sh`. The script runs Rust tests, builds the WASM module, and packages `downloads/impact-browser.zip`. The Pages workflow runs this build before publishing so the binary and source stay together. The archive includes prebuilt browser assets and the Rust source; extract and follow `START-HERE.txt`. It requires a local HTTP server, not compilation. It is not a native desktop executable.
+
+`python3 tests/arena_browser.py` tests the actual WASM build in mobile and desktop browsers, including simultaneous movement/jump/dash, both attacks, slow motion, touch aiming, pause/reset, fullscreen, and keyboard/mouse controls.
+
 ## Validate
 
 `node --test tests/puzzles.test.mjs` checks generated puzzle solutions, folding with an occupied sheet, state immutability, role ownership, room hints, gate collisions, braking, and completing the marble maze through actual physics in every orientation.
