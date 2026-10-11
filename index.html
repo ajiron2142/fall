@@ -1,27 +1,9 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#151b2b">
-  <title>Two of Us · Game Lab</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#08151d"><title>AFTERLIGHT · Between two worlds</title><link rel="stylesheet" href="echo.css"></head>
 <body>
-  <main>
-    <header><span class="eyebrow">TWO OF US / GAME LAB</span><h1>Find your kind of fun.</h1><p>Three tiny experiments in working together.</p></header>
-    <nav aria-label="Choose a game">
-      <button data-game="signal" class="selected">01 Signal Room</button>
-      <button data-game="map">02 Two Sides</button>
-      <button data-game="pulse">03 In Sync</button>
-    </nav>
-    <section class="game" aria-labelledby="game-title">
-      <div class="topline"><span id="tag"></span><button id="reset" class="quiet">New round ↻</button></div>
-      <h2 id="game-title"></h2><p id="intro"></p>
-      <div id="board"></div>
-      <div id="status" role="status" aria-live="polite"></div>
-    </section>
-    <aside><strong>Prototype mode</strong><p>No accounts or networking. Signal Room and Two Sides let you peek at your partner’s information; In Sync has a simulated partner. All rounds are generated locally.</p></aside>
-  </main>
-  <script src="game.js"></script>
-</body>
-</html>
+<canvas id="world" aria-label="First person floating ruins game"></canvas>
+<div id="hud"><div class="brand">AFTERLIGHT<span>BETWEEN TWO WORLDS</span></div><div id="anchors">◇ ◇ ◇</div><button id="menu" aria-label="Pause game">Ⅱ</button></div>
+<div id="crosshair">+</div><div id="message" role="status" aria-live="polite"></div><div id="phase-label">01 / TIDE</div>
+<div id="controls"><div id="stick" aria-label="Movement joystick"><div id="thumb"></div><span>MOVE</span></div><div class="actions"><button id="shift">SHIFT<span>other reality</span></button><button id="dash">DASH<span>burst forward</span></button><button id="jump">JUMP<span>hold your nerve</span></button></div></div>
+<div id="overlay"><div class="panel"><div class="eyebrow">A PLAYABLE EXPERIMENT</div><h1>One place.<br>Two realities.</h1><p id="description">A city suspended between tides. Paths exist in one world and disappear in the other. Shift midair. Carry your momentum. Wake three anchors to open the way home.</p><div class="instructions"><strong>PHONE</strong><span>Left thumb moves · drag right side to look<br>Jump, dash, and shift with the buttons</span><strong>DESKTOP</strong><span>WASD + mouse · Space jump · Shift dash · E change reality · Esc release mouse</span></div><button id="start">Enter the afterlight ↗</button><div class="links"><button id="new-world">Generate another world</button><a href="lab.html">Earlier experiments</a></div><small>Solo prototype · no accounts · no network required</small></div></div>
+<script type="module" src="echo.js"></script></body></html>
