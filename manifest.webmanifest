@@ -1,0 +1,9 @@
+{
+  "name": "Afterlight",
+  "short_name": "Afterlight",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#08151d",
+  "theme_color": "#08151d"
+}

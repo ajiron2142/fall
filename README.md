@@ -4,6 +4,14 @@ Afterlight is a first-person 3D browser prototype: jump and dash across generate
 
 The three earlier prototypes remain at `lab.html`. No build step or backend. Three.js 0.160.1 is vendored with its MIT license; its npm artifact was SHA-512 verified. Rendering uses WebGL. Afterlight is solo, not implemented multiplayer. Physics handles platform landings, not general rigid bodies; the skyline is decorative. Real phone performance still needs hands-on testing.
 
+Hold the joystick with one finger and press Jump with another. Action buttons respond on press, including secondary touch pointers. Jump input is buffered for 200 ms and works for 160 ms after leaving an edge. The first three crossings are straight, always solid, and closer together. Each successful landing saves your position.
+
+Tap ⛶ for fullscreen where supported. On iPhones without browser fullscreen support, use Share → Add to Home Screen and launch from the home screen.
+
+## Browser regression checks
+
+Install Python Playwright (`pip install playwright`, then `playwright install chromium`), and run `python3 tests/browser_smoke.py`. The test starts its own temporary local server. It checks simultaneous joystick and second-finger jumping across the first gap, desktop and mobile actions, fullscreen, fall recovery, and completing 30 generated routes through the actual physics. The deterministic route driver is injected only into the test response; production has no movement shortcuts.
+
 From this directory, run `python3 -m http.server 8000`, then open the site in a browser. Static hosting can serve these files directly.
 
 ## Host on GitHub Pages
