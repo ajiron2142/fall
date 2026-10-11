@@ -96,6 +96,7 @@ struct Game {
     v: V,
     grounded: bool,
     coyote: f32,
+    air_jump_available: bool,
     jump_buffer: f32,
     dash_cd: f32,
     dash_time: f32,
@@ -153,6 +154,7 @@ impl Game {
             v: V::default(),
             grounded: true,
             coyote: 0.14,
+            air_jump_available: true,
             jump_buffer: 0.0,
             dash_cd: 0.0,
             dash_time: 0.0,
@@ -193,6 +195,9 @@ impl Game {
         self.combo_time = (self.combo_time - dt).max(0.0);
         if self.combo_time == 0.0 {
             self.combo = 0;
+        }
+        if self.grounded {
+            self.air_jump_available = true;
         }
         self.coyote = if self.grounded {
             0.14
@@ -243,6 +248,12 @@ impl Game {
             self.grounded = false;
             self.coyote = 0.0;
             self.jump_buffer = 0.0;
+        } else if jump && self.air_jump_available {
+            // Restart a slightly softer arc even while falling. Do not stack upward
+            // velocity: timing changes the height, not the strength of the kick.
+            self.v.y = 9.8;
+            self.air_jump_available = false;
+            self.jump_buffer = 0.0;
         }
         if dash && self.dash_cd <= 0.0 {
             let dir = if wish.length() > 0.1 {
@@ -286,6 +297,9 @@ impl Game {
                 self.p.z = self.p.z.clamp(-17.5, 17.5);
                 self.v.z = 0.0;
             }
+        }
+        if self.grounded {
+            self.air_jump_available = true;
         }
         let wdt = dt * if slow { 0.24 } else { 1.0 };
         for (i, body) in self.bodies.iter_mut().enumerate() {
@@ -583,6 +597,10 @@ pub extern "C" fn last_distance() -> f32 {
     GAME.with(|g| g.borrow().last_distance)
 }
 #[no_mangle]
+pub extern "C" fn air_jump_available() -> u32 {
+    GAME.with(|g| g.borrow().air_jump_available as u32)
+}
+#[no_mangle]
 pub extern "C" fn obstacle_count() -> usize {
     BLOCKS.len()
 }
@@ -621,6 +639,35 @@ mod tests {
         assert!(g.grounded);
         g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, true, false);
         assert!(g.v.z < -24.0 && g.dash_cd > 0.0);
+    }
+    #[test]
+    fn double_jump_relaunches_falling_player_and_preserves_momentum() {
+        let mut g = Game::new(1);
+        g.step(1.0 / 120.0, 1.0, 0.0, 0.0, true, true, false);
+        run(&mut g, 0.5, 0.0, 0.0);
+        assert!(g.v.y < 0.0 && g.p.y > 0.0);
+        let height = g.p.y;
+        let forward_speed = g.v.z;
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        assert!(g.v.y > 9.5 && g.p.y > height && !g.air_jump_available);
+        assert_eq!(g.v.z, forward_speed);
+        run(&mut g, 0.12, 0.0, 0.0);
+        let before = g.v.y;
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        assert!(g.v.y < before); // No third midair jump.
+        run(&mut g, 1.2, 0.0, 0.0);
+        assert!(g.grounded && g.air_jump_available);
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        assert!(g.v.y > 10.0);
+    }
+    #[test]
+    fn early_double_jump_does_not_stack_upward_speed_or_repeat_itself() {
+        let mut g = Game::new(1);
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
+        assert!(g.v.y < 9.8 && !g.air_jump_available);
+        run(&mut g, 0.3, 0.0, 0.0);
+        assert!(g.v.y < 3.0 && !g.air_jump_available);
     }
     #[test]
     fn bat_hits_front_ball_and_launches_it() {
