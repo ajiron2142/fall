@@ -20,6 +20,8 @@ Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
 Choose Snappy, Momentum, or Floaty movement in Pause; each starts the same course.
 The shotgun is equipped by default. Course / R restarts at platform 01.
+Air jump with movement input redirects momentum; bullet time gives time to aim.
+The course uses long platforms spaced 20 metres apart with gentle turns.
 The arena is 160 x 320 metres. Runway starts a clear 280-metre sprint lane.
 
 The Rust core handles movement, collisions, bat impulses, travelling shotgun pellets,

@@ -92,83 +92,83 @@ const BLOCKS: [Block; 15] = [
     },
     Block {
         x: 18.0,
-        z: 9.0,
-        w: 5.0,
-        d: 5.0,
+        z: 110.0,
+        w: 12.0,
+        d: 18.0,
         h: 0.8,
         base: 0.35,
     },
     Block {
-        x: 25.0,
-        z: 5.0,
-        w: 5.0,
-        d: 5.0,
-        h: 2.0,
-        base: 1.55,
+        x: 22.0,
+        z: 90.0,
+        w: 10.0,
+        d: 14.0,
+        h: 1.5,
+        base: 1.05,
     },
     Block {
-        x: 29.0,
-        z: -3.0,
-        w: 4.0,
-        d: 4.0,
-        h: 3.4,
-        base: 2.95,
+        x: 28.0,
+        z: 70.0,
+        w: 10.0,
+        d: 14.0,
+        h: 2.2,
+        base: 1.75,
     },
     Block {
-        x: 24.0,
+        x: 36.0,
+        z: 50.0,
+        w: 12.0,
+        d: 16.0,
+        h: 2.9,
+        base: 2.45,
+    },
+    Block {
+        x: 42.0,
+        z: 30.0,
+        w: 12.0,
+        d: 16.0,
+        h: 3.6,
+        base: 3.15,
+    },
+    Block {
+        x: 42.0,
+        z: 10.0,
+        w: 12.0,
+        d: 16.0,
+        h: 4.3,
+        base: 3.85,
+    },
+    Block {
+        x: 36.0,
         z: -10.0,
-        w: 4.0,
-        d: 4.0,
-        h: 4.8,
-        base: 4.35,
+        w: 12.0,
+        d: 16.0,
+        h: 5.0,
+        base: 4.55,
     },
     Block {
-        x: 29.0,
-        z: -18.0,
-        w: 4.0,
-        d: 4.0,
-        h: 6.2,
-        base: 5.75,
+        x: 28.0,
+        z: -30.0,
+        w: 12.0,
+        d: 16.0,
+        h: 5.7,
+        base: 5.25,
     },
     Block {
-        x: 20.0,
-        z: -24.0,
-        w: 5.0,
-        d: 5.0,
-        h: 7.4,
-        base: 6.95,
+        x: 18.0,
+        z: -50.0,
+        w: 12.0,
+        d: 16.0,
+        h: 6.4,
+        base: 5.95,
     },
     Block {
-        x: 11.0,
-        z: -27.0,
-        w: 4.0,
-        d: 4.0,
-        h: 8.7,
-        base: 8.25,
-    },
-    Block {
-        x: 2.0,
-        z: -27.0,
-        w: 5.0,
-        d: 5.0,
-        h: 10.0,
-        base: 9.55,
-    },
-    Block {
-        x: -8.0,
-        z: -26.0,
-        w: 5.0,
-        d: 5.0,
-        h: 11.2,
-        base: 10.75,
-    },
-    Block {
-        x: -18.0,
-        z: -25.0,
-        w: 8.0,
-        d: 6.0,
-        h: 12.0,
-        base: 11.55,
+        x: 6.0,
+        z: -70.0,
+        w: 16.0,
+        d: 20.0,
+        h: 7.1,
+        base: 6.65,
     },
 ];
 #[derive(Clone, Copy)]
@@ -403,6 +403,18 @@ impl Game {
         } else if jump && self.air_jump_available {
             // Restart a slightly softer arc even while falling. Do not stack upward
             // velocity: timing changes the height, not the strength of the kick.
+            // A deliberate air jump redirects momentum instantly, including in
+            // bullet time. With no movement input it keeps the existing heading.
+            if wish.length() > 0.1 {
+                let direction = wish.unit();
+                let speed = (self.v.x * self.v.x + self.v.z * self.v.z)
+                    .sqrt()
+                    .max(tuning.speed * wish.length())
+                    .min(tuning.max_air_speed);
+                self.v.x = direction.x * speed;
+                self.v.z = direction.z * speed;
+                self.dash_time = 0.0;
+            }
             self.v.y = tuning.double_jump;
             self.air_jump_available = false;
             self.jump_buffer = 0.0;
@@ -978,6 +990,25 @@ mod tests {
         assert!(g.v.y > 10.0);
     }
     #[test]
+    fn air_jump_redirects_fast_momentum_in_bullet_time_without_extra_jumps() {
+        for preset in 0..3 {
+            let mut g = Game::new(1);
+            g.movement_preset = preset;
+            g.p = V::new(-50.0, 6.0, 70.0);
+            g.grounded = false;
+            g.coyote = 0.0;
+            g.v = V::new(0.0, -3.0, -26.0);
+            g.dash_time = 0.1;
+            let height = g.p.y;
+            g.step(1.0 / 120.0, 0.0, 1.0, 0.0, true, false, true);
+            assert!((g.v.x - 26.0).abs() < 0.01 && g.v.z.abs() < 0.01);
+            assert!(g.v.y > 9.0 && (g.p.y - height).abs() < 0.01);
+            assert!(!g.air_jump_available && g.dash_time == 0.0);
+            g.step(1.0 / 120.0, 0.0, -1.0, 0.0, true, false, true);
+            assert!(g.v.x > 25.0); // No repeat redirect without landing.
+        }
+    }
+    #[test]
     fn early_double_jump_does_not_stack_upward_speed_or_repeat_itself() {
         let mut g = Game::new(1);
         g.step(1.0 / 120.0, 0.0, 0.0, 0.0, true, false, false);
@@ -1151,6 +1182,41 @@ mod tests {
         g.p = V::new(HALF_WIDTH - 0.51, 0.0, 0.0);
         run(&mut g, 1.0, 0.0, 1.0);
         assert!((g.p.x - (HALF_WIDTH - 0.5)).abs() < 0.001);
+    }
+    #[test]
+    fn flowing_course_gaps_are_reachable_at_speed_in_every_preset() {
+        for preset in 0..3 {
+            for index in 5..14 {
+                let from = BLOCKS[index];
+                let to = BLOCKS[index + 1];
+                let yaw = -(to.x - from.x).atan2(from.z - to.z);
+                let mut g = Game::new(1);
+                g.movement_preset = preset;
+                g.p = V::new(from.x, from.h, from.z);
+                g.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(MOVEMENT[preset].speed);
+                let mut landed = false;
+                for frame in 0..360 {
+                    g.step(
+                        1.0 / 120.0,
+                        1.0,
+                        0.0,
+                        yaw,
+                        frame == 0 || frame == 42,
+                        false,
+                        false,
+                    );
+                    if frame > 42 && g.grounded {
+                        landed = (g.p.y - to.h).abs() < 0.001;
+                        break;
+                    }
+                }
+                assert!(
+                    landed,
+                    "preset {preset}, gap {index}: {:?}",
+                    (g.p.x, g.p.y, g.p.z)
+                );
+            }
+        }
     }
     #[test]
     fn movement_presets_produce_distinct_speed_and_jump_arcs() {
