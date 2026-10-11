@@ -14,3 +14,5 @@
 #controls[hidden]{display:none}.settings{flex-wrap:wrap}.settings button{flex:1 1 100px}
 
 .playgrounds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0}.playgrounds button{padding:10px 4px;font-size:10px;border:1px solid #aacbdd33;border-radius:8px;background:#152d3d}.playgrounds button[aria-pressed="true"]{background:#254d61;border-color:#83d6f5}.playgrounds button:last-child{grid-column:1/-1}#overlay{align-items:safe center}
+
+#range{position:fixed;top:124px;left:304px;background:#122e49b0;color:#d8f5ff;border:1px solid #9edfff44;border-radius:9px;padding:8px 12px;font:700 10px system-ui;letter-spacing:1px;cursor:pointer}@media(max-width:600px){#range{top:112px;left:206px;font-size:9px}}@media(max-height:480px) and (orientation:landscape){#range{top:105px}}

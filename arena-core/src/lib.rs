@@ -523,6 +523,8 @@ struct Body {
     glow: f32,
     scored: f32,
     last_shot: u32,
+    health: f32,
+    respawn: f32,
 }
 #[derive(Clone, Copy, Debug, Default)]
 struct Pellet {
@@ -560,7 +562,7 @@ struct Game {
     best: u32,
     combo_time: f32,
     time: f32,
-    hoops: u32,
+    breaks: u32,
     slow: bool,
     last_hit: i32,
     last_distance: f32,
@@ -576,10 +578,10 @@ impl Game {
             V::new(0.0, 0.6, -3.0),
             V::new(-8.0, 0.6, 8.0),
             V::new(8.0, 0.6, 8.0),
-            V::new(-6.0, 2.6, -7.0),
-            V::new(0.0, 3.1, -8.0),
-            V::new(6.0, 2.6, -7.0),
-            V::new(-1.0, 4.0, -11.0),
+            V::new(-2.5, 1.65, 5.0),
+            V::new(0.0, 1.65, 2.0),
+            V::new(2.5, 1.65, 5.0),
+            V::new(4.0, 1.65, 0.0),
         ];
         let mut bodies = [Body::default(); COUNT];
         for (i, p) in positions.into_iter().enumerate() {
@@ -599,6 +601,7 @@ impl Game {
                 home: p,
                 r: if i < 6 { 0.6 } else { 0.48 },
                 kind: if i < 6 { 0 } else { 1 },
+                health: if i < 6 { 50.0 } else { 20.0 },
                 ..Body::default()
             };
         }
@@ -630,7 +633,7 @@ impl Game {
             best: 0,
             combo_time: 0.0,
             time: 0.0,
-            hoops: 0,
+            breaks: 0,
             slow: false,
             last_hit: -1,
             last_distance: 35.0,
@@ -884,22 +887,36 @@ impl Game {
             }
         }
         let wdt = dt;
-        let previous_bodies = self.bodies.map(|b| b.p);
+        let mut previous_bodies = self.bodies.map(|b| b.p);
         for (i, body) in self.bodies.iter_mut().enumerate() {
             body.glow = (body.glow - dt * 2.0).max(0.0);
             body.scored = (body.scored - dt).max(0.0);
-            let old = body.p;
-            if body.kind == 0 {
-                body.v.y -= 18.0 * wdt;
-            } else {
-                let home = body.home.add(V::new(
-                    (self.time * 0.6 + i as f32).sin() * 1.0,
-                    (self.time * 1.2 + i as f32).sin() * 0.25,
-                    0.0,
-                ));
-                let spring = home.sub(body.p).scale(3.5);
-                body.v = body.v.add(spring.scale(wdt));
+            let rebuilding = body.health <= 0.0;
+            if body.health <= 0.0 {
+                body.respawn = (body.respawn - dt).max(0.0);
+                if body.respawn > 0.0 {
+                    continue;
+                }
+                body.p = body.home;
+                body.v = V::default();
+                body.health = if body.kind == 0 { 50.0 } else { 20.0 };
+                body.last_shot = 0;
+                previous_bodies[i] = body.p;
             }
+            let old = body.p;
+            if body.kind == 1 {
+                body.p = body.home;
+                body.v = V::default();
+                if i == 9 {
+                    body.p.x += (self.time * 0.8).sin() * 1.5;
+                    body.v.x = (self.time * 0.8).cos() * 1.2;
+                }
+                if rebuilding {
+                    previous_bodies[i] = body.p;
+                }
+                continue;
+            }
+            body.v.y -= 18.0 * wdt;
             body.v = body
                 .v
                 .scale((-(if body.kind == 0 { 0.32 } else { 0.8 }) * wdt).exp());
@@ -907,13 +924,13 @@ impl Game {
             if body.p.y < body.r {
                 body.p.y = body.r;
                 if body.v.y < 0.0 {
-                    body.v.y *= -0.65;
+                    body.v.y *= -0.25;
                 }
                 if body.v.y.abs() < 0.4 {
                     body.v.y = 0.0;
                 }
-                body.v.x *= (-1.5 * wdt).exp();
-                body.v.z *= (-1.5 * wdt).exp();
+                body.v.x *= (-6.0 * wdt).exp();
+                body.v.z *= (-6.0 * wdt).exp();
             }
             for b in BLOCKS {
                 if body.p.y - body.r < b.h
@@ -923,10 +940,10 @@ impl Game {
                 {
                     if old.y - body.r >= b.h - 0.02 && body.v.y < 0.0 {
                         body.p.y = b.h + body.r;
-                        body.v.y *= -0.55;
+                        body.v.y *= -0.25;
                     } else if old.y + body.r <= b.base && body.v.y > 0.0 {
                         body.p.y = b.base - body.r;
-                        body.v.y *= -0.55;
+                        body.v.y *= -0.25;
                     } else {
                         push_box(&mut body.p, &mut body.v, b, body.r, true);
                     }
@@ -951,33 +968,47 @@ impl Game {
                 let delta = V::new(body.p.x - self.p.x, 0.0, body.p.z - self.p.z).unit();
                 body.v = body.v.add(delta.scale(8.0 * wdt));
             }
-            for hx in [-12.0_f32, 0.0, 12.0] {
-                if body.scored <= 0.0 && old.z > -15.7 && body.p.z <= -15.7 {
-                    let fraction = ((old.z + 15.7) / (old.z - body.p.z)).clamp(0.0, 1.0);
-                    let cross = old.add(body.p.sub(old).scale(fraction));
-                    if (cross.x - hx).hypot(cross.y - 2.6) < 1.8 {
-                        self.score += 75;
-                        self.hoops += 1;
-                        body.scored = 1.5;
-                        body.glow = 1.0;
-                    }
-                }
-            }
         }
-        // Equal-mass sphere contacts let a bat strike produce a chain reaction.
+        // Axis-aligned block contacts match the simple visible crate geometry.
         for a in 0..COUNT {
             for b in a + 1..COUNT {
+                if self.bodies[a].kind != 0
+                    || self.bodies[b].kind != 0
+                    || self.bodies[a].health <= 0.0
+                    || self.bodies[b].health <= 0.0
+                {
+                    continue;
+                }
                 let delta = self.bodies[b].p.sub(self.bodies[a].p);
-                let distance = delta.length();
                 let radius = self.bodies[a].r + self.bodies[b].r;
-                if distance > 0.001 && distance < radius {
-                    let n = delta.scale(1.0 / distance);
-                    let push = n.scale((radius - distance) * 0.5);
+                let overlap = V::new(
+                    radius - delta.x.abs(),
+                    radius - delta.y.abs(),
+                    radius - delta.z.abs(),
+                );
+                if overlap.x > 0.0 && overlap.y > 0.0 && overlap.z > 0.0 {
+                    let (n, depth) = if overlap.x < overlap.y && overlap.x < overlap.z {
+                        (
+                            V::new(if delta.x >= 0.0 { 1.0 } else { -1.0 }, 0.0, 0.0),
+                            overlap.x,
+                        )
+                    } else if overlap.y < overlap.z {
+                        (
+                            V::new(0.0, if delta.y >= 0.0 { 1.0 } else { -1.0 }, 0.0),
+                            overlap.y,
+                        )
+                    } else {
+                        (
+                            V::new(0.0, 0.0, if delta.z >= 0.0 { 1.0 } else { -1.0 }),
+                            overlap.z,
+                        )
+                    };
+                    let push = n.scale(depth * 0.5);
                     self.bodies[a].p = self.bodies[a].p.sub(push);
                     self.bodies[b].p = self.bodies[b].p.add(push);
                     let closing = self.bodies[b].v.sub(self.bodies[a].v).dot(n);
                     if closing < 0.0 {
-                        let impulse = n.scale(-closing * 0.8);
+                        let impulse = n.scale(-closing * 0.65);
                         self.bodies[a].v = self.bodies[a].v.sub(impulse);
                         self.bodies[b].v = self.bodies[b].v.add(impulse);
                     }
@@ -1010,16 +1041,14 @@ impl Game {
             }
             for (i, b) in self.bodies.iter().enumerate() {
                 // Sweep relative to the target's movement to prevent tunnelling.
+                if b.health <= 0.0 {
+                    continue;
+                }
                 let relative = motion.sub(b.p.sub(previous[i]));
-                let oc = pellet.p.sub(previous[i]);
-                let a = relative.dot(relative);
-                let d = oc.dot(relative);
-                let c = oc.dot(oc) - b.r.powi(2);
-                let disc = d * d - a * c;
-                let t = if c <= 0.0 {
-                    0.0
-                } else if a > 0.000001 && disc >= 0.0 {
-                    (-d - disc.sqrt()) / a
+                let length = relative.length();
+                let bounds = body_bounds(*b, previous[i]);
+                let t = if length > 0.000001 {
+                    ray_box(pellet.p, relative.scale(1.0 / length), bounds) / length
                 } else {
                     2.0
                 };
@@ -1037,6 +1066,12 @@ impl Game {
                 let b = &mut self.bodies[i];
                 b.v = b.v.add(pellet.dir.scale(strength));
                 b.glow = 1.0;
+                b.health =
+                    (b.health - 8.0 * (0.2 + 0.8 * (1.0 - self.pellets[n].travel / 9.0))).max(0.0);
+                if b.health == 0.0 {
+                    b.respawn = 3.0;
+                    self.breaks += 1;
+                }
                 let new_hit = b.last_shot != pellet.shot;
                 if new_hit {
                     b.v.y += 1.2;
@@ -1070,6 +1105,9 @@ impl Game {
         if weapon == 0 {
             let mut count = 0;
             for (i, b) in self.bodies.iter_mut().enumerate() {
+                if b.health <= 0.0 {
+                    continue;
+                }
                 let delta = b.p.sub(eye);
                 let dist = delta.length();
                 if dist < 3.7 + b.r
@@ -1083,6 +1121,14 @@ impl Game {
                     b.v = V::new(-yaw.sin(), 0.0, -yaw.cos()).scale(32.0).add(carry);
                     b.v.y = 3.2 + pitch.max(0.0) * 16.0 + self.v.y.max(0.0) * 0.2;
                     b.glow = 1.0;
+                    b.health = (b.health
+                        - 50.0
+                        - (self.v.x * self.v.x + self.v.z * self.v.z).sqrt() * 0.9)
+                        .max(0.0);
+                    if b.health == 0.0 {
+                        b.respawn = 3.0;
+                        self.breaks += 1;
+                    }
                     count += 1;
                     self.last_hit = i as i32;
                     self.last_impact_weapon = 0;
@@ -1146,7 +1192,7 @@ impl Game {
             self.combo as f32,
             self.attack_cd,
             self.time,
-            self.hoops as f32,
+            self.breaks as f32,
         ]);
         for (i, b) in self.bodies.iter().enumerate() {
             let start = HEADER + i * STRIDE;
@@ -1162,6 +1208,16 @@ impl Game {
                 b.v.z,
             ]);
         }
+    }
+}
+fn body_bounds(body: Body, p: V) -> Block {
+    Block {
+        x: p.x,
+        z: p.z,
+        w: body.r * 2.0,
+        d: if body.kind == 0 { body.r * 2.0 } else { 0.18 },
+        h: p.y + body.r,
+        base: p.y - body.r,
     }
 }
 fn push_box(p: &mut V, v: &mut V, b: Block, r: f32, bounce: bool) {
@@ -1329,6 +1385,26 @@ pub extern "C" fn start_runway() {
     });
 }
 #[no_mangle]
+pub extern "C" fn body_health(index: usize) -> f32 {
+    GAME.with(|g| {
+        g.borrow()
+            .bodies
+            .get(index)
+            .map(|b| b.health)
+            .unwrap_or(0.0)
+    })
+}
+#[no_mangle]
+pub extern "C" fn body_respawn(index: usize) -> f32 {
+    GAME.with(|g| {
+        g.borrow()
+            .bodies
+            .get(index)
+            .map(|b| b.respawn)
+            .unwrap_or(0.0)
+    })
+}
+#[no_mangle]
 pub extern "C" fn wall_running() -> u32 {
     GAME.with(|g| g.borrow().wall_running as u32)
 }
@@ -1459,7 +1535,7 @@ mod tests {
         assert!(g.v.y < 3.0 && !g.air_jump_available);
     }
     #[test]
-    fn bat_hits_front_ball_and_launches_it() {
+    fn bat_smashes_front_block_with_forward_impulse() {
         let mut g = Game::new(1);
         assert_eq!(g.attack(0.0, -0.15, 0), 1);
         assert!(
@@ -1523,6 +1599,7 @@ mod tests {
         let mut far = Game::new(1);
         for b in &mut far.bodies {
             b.p = V::new(15.0, 1.65, 15.0);
+            b.home = b.p;
         }
         far.bodies[0].p = V::new(0.0, 1.65, -0.0); // Ten metres from the player.
         assert_eq!(far.attack(0.0, 0.0, 1), 0);
@@ -1536,6 +1613,7 @@ mod tests {
         let mut g = Game::new(1);
         for b in &mut g.bodies {
             b.p = V::new(15.0, 1.65, 15.0);
+            b.home = b.p;
         }
         g.bodies[0].p = V::new(-0.7, 1.65, 4.0);
         g.bodies[1].p = V::new(0.7, 1.65, 4.0);
@@ -1902,13 +1980,43 @@ mod tests {
         assert!((g.p.y + 1.7 - b.base).abs() < 0.001 && g.v.y == 0.0);
     }
     #[test]
-    fn hoop_awards_points_when_ball_crosses_ring() {
+    fn blocks_break_after_damage_and_respawn_cleanly() {
         let mut g = Game::new(1);
-        g.bodies[0].p = V::new(12.0, 2.6, -15.6);
-        g.bodies[0].v = V::new(0.0, 0.0, -20.0);
-        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
-        assert_eq!(g.hoops, 1);
-        assert_eq!(g.score, 75);
+        assert_eq!(g.attack(0.0, -0.15, 0), 1);
+        assert_eq!(g.bodies[0].health, 0.0);
+        assert_eq!(g.breaks, 1);
+        g.attack_cd = 0.0;
+        assert_eq!(g.attack(0.0, -0.15, 0), 0);
+        run(&mut g, 3.1, 0.0, 0.0);
+        assert_eq!(g.bodies[0].health, 50.0);
+        assert!(g.bodies[0].v.length() < 1.0);
+    }
+    #[test]
+    fn square_target_hits_match_panel_edges_and_break_on_contact() {
+        let mut g = Game::new(1);
+        g.bodies[6].p = V::new(0.0, 1.65, 5.0);
+        g.bodies[6].home = g.bodies[6].p;
+        let b = g.bodies[6];
+        let bounds = body_bounds(b, b.p);
+        assert!(
+            ray_box(
+                V::new(b.r - 0.01, 1.65, 10.0),
+                V::new(0.0, 0.0, -1.0),
+                bounds
+            ) < 6.0
+        );
+        assert!(
+            ray_box(
+                V::new(b.r + 0.01, 1.65, 10.0),
+                V::new(0.0, 0.0, -1.0),
+                bounds
+            ) > 9.0
+        );
+        g.bodies[0].p.x = 8.0;
+        g.attack(0.0, 0.0, 1);
+        run(&mut g, 0.2, 0.0, 0.0);
+        assert_eq!(g.bodies[6].health, 0.0);
+        assert!(g.breaks > 0);
     }
     #[test]
     fn reset_snapshot_and_seed_are_reproducible() {

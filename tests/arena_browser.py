@@ -28,6 +28,7 @@ try:
   page.locator('#start').tap();page.locator('#weapon').tap();
   initial=page.evaluate('''()=>{const before=impactState().shots;document.getElementById('fire').dispatchEvent(new MouseEvent('click',{detail:0}));return {before,after:impactState().shots,pending:impactState().batPending};}''');assert initial['before']==initial['after'] and initial['pending'],initial
   page.wait_for_function('impactState().hits>0');assert page.evaluate('impactState().bodies[0].vz')< -15
+  assert page.evaluate('impactState().bodies[0].health===0 && !impactState().bodies[0].visible && impactState().fragmentCount>=8 && impactState().breaks===1')
   page.wait_for_timeout(500)
   page.screenshot(path='/tmp/impact-mobile.png')
   cdp=page.context.new_cdp_session(page);r=page.locator('#stick').bounding_box();x=r['x']+r['width']/2;y=r['y']+r['height']/2
@@ -102,6 +103,6 @@ try:
   page.keyboard.down('KeyW');page.wait_for_function('impactState().player.z<139');page.keyboard.press('Space');page.wait_for_function('impactState().player.y>.5');page.keyboard.up('KeyW')
   page.screenshot(path='/tmp/impact-runway.png')
   assert not errors,errors
-  print('Passed real WASM loading, bat launch and shotgun hit, simultaneous touch movement/jump/dash, bullet-time airborne suspension and delayed pellet hits after resume, pause/reset, fullscreen, touch aiming, landscape, desktop mouse attack, stable walking camera, touch/keyboard double jumps and FPS counter, mouse wheel switching and restored Q shortcut, default shotgun, three saved movement presets, seven difficulty-tiered playgrounds, automatic wall runs and wall kicks, expanded 160x320 arena and runway movement; no browser errors.')
+  print('Passed real WASM loading, block smash with fragments and shotgun hit, simultaneous touch movement/jump/dash, bullet-time airborne suspension and delayed pellet hits after resume, pause/reset, fullscreen, touch aiming, landscape, desktop mouse attack, stable walking camera, touch/keyboard double jumps and FPS counter, mouse wheel switching and restored Q shortcut, default shotgun, three saved movement presets, seven difficulty-tiered playgrounds, automatic wall runs and wall kicks, expanded 160x320 arena and runway movement; no browser errors.')
   browser.close()
 finally:server.shutdown();server.server_close()

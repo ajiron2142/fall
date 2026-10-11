@@ -14,7 +14,7 @@ This is a browser build, not a native desktop executable.
 Do not open arena.html through file://; browsers restrict WASM loading that way.
 Everything runs locally. No account, backend, or runtime CDN is required.
 
-WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse wheel weapon, R course, E bullet time.
+WASD + mouse, click to attack, Space jump/double jump, Shift dash, Q / mouse wheel weapon, R course, T range, E bullet time.
 Touch controls default off; enable them in settings (saved on this device).
 Touch: joystick to move, drag the sky to aim, separate jump/dash/attack buttons.
 Aim assist defaults on for touch. Toggle it in the pause menu.
@@ -31,7 +31,11 @@ Move alongside glowing walls while airborne to wall-run; Jump kicks away.
 Wall-only sections need no jumps; only the combined section requires both skills.
 The arena is 160 x 320 metres. Runway starts a clear 280-metre sprint lane.
 
-The Rust core handles movement, collisions, bat impulses, travelling shotgun pellets,
+Range: smash blocks and shoot square targets; one target moves horizontally.
+Damage bars, cube fragments, automatic rebuilding after 3 seconds of world time.
+Blocks and target panels use matching box hitboxes; fragments are visual effects.
+
+The Rust core handles movement, collisions, damage, rebuilding, bat impulses, travelling shotgun pellets,
 object simulation, slow motion, and scoring. Three.js handles rendering;
 browser JavaScript handles input, sound, and presentation. This is a small
 prototype, not a complete Rust game engine or a multiplayer FPS.
