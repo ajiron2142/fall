@@ -536,6 +536,7 @@ struct Game {
     p: V,
     v: V,
     grounded: bool,
+    landing_grip: f32,
     movement_preset: usize,
     course_progress: usize,
     playground: usize,
@@ -605,6 +606,7 @@ impl Game {
             p: V::new(0.0, 0.0, 10.0),
             v: V::default(),
             grounded: true,
+            landing_grip: 0.0,
             movement_preset: 0,
             course_progress: 0,
             playground: 0,
@@ -650,6 +652,8 @@ impl Game {
         if !dt.is_finite() || !yaw.is_finite() {
             return;
         }
+        self.landing_grip = (self.landing_grip - dt).max(0.0);
+        let was_grounded = self.grounded;
         self.wall_lock = (self.wall_lock - dt).max(0.0);
         if self.grounded {
             self.wall_time = 0.0;
@@ -696,7 +700,10 @@ impl Game {
         );
         if self.dash_time <= 0.0 {
             if self.grounded {
-                let blend = 1.0 - (-tuning.ground_accel * pdt).exp();
+                // Grip builds over the first 160ms after touchdown. Keep a
+                // short landing skid, then return to normal firm traction.
+                let grip = 1.0 - 0.55 * (self.landing_grip / 0.16);
+                let blend = 1.0 - (-tuning.ground_accel * grip * pdt).exp();
                 let horizontal = (self.v.x * self.v.x + self.v.z * self.v.z).sqrt();
                 let aligned = wish.length() > 0.1
                     && horizontal > 0.1
@@ -710,6 +717,11 @@ impl Game {
                 };
                 self.v.x += (wish.x * speed - self.v.x) * blend;
                 self.v.z += (wish.z * speed - self.v.z) * blend;
+                if wish.length() < 0.01 && (self.v.x * self.v.x + self.v.z * self.v.z).sqrt() < 0.08
+                {
+                    self.v.x = 0.0;
+                    self.v.z = 0.0;
+                }
             } else if wish.length() > 0.01 {
                 // Accelerate along the requested direction without deleting jump momentum.
                 let direction = wish.unit();
@@ -867,6 +879,9 @@ impl Game {
         }
         if self.grounded {
             self.air_jump_available = true;
+            if !was_grounded {
+                self.landing_grip = 0.16;
+            }
         }
         let wdt = dt;
         let previous_bodies = self.bodies.map(|b| b.p);
@@ -1297,6 +1312,7 @@ pub extern "C" fn start_runway() {
         g.p = V::new(-50.0, 0.0, 140.0);
         g.v = V::default();
         g.grounded = true;
+        g.landing_grip = 0.0;
         g.air_jump_available = true;
         g.coyote = 0.14;
         g.jump_buffer = 0.0;
@@ -1333,6 +1349,7 @@ pub extern "C" fn start_playground(index: usize) {
         }
         g.v = V::default();
         g.grounded = true;
+        g.landing_grip = 0.0;
         g.air_jump_available = true;
         g.coyote = 0.14;
         g.jump_buffer = 0.0;
@@ -1663,6 +1680,7 @@ mod tests {
         assert!(!g.wall_running && g.v.x < -7.0 && g.v.y > 10.0 && g.air_jump_available);
         g.p.y = 0.0;
         g.grounded = true;
+        g.landing_grip = 0.0;
         g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
         assert!(!g.wall_running);
     }
@@ -1788,6 +1806,25 @@ mod tests {
         g.v.z = -18.0;
         g.step(1.0 / 120.0, 1.0, 0.0, 0.0, false, false, false);
         assert!(!g.wall_running);
+    }
+    #[test]
+    fn landing_has_a_short_skid_then_stops_with_firm_grip() {
+        let mut g = Game::new(1);
+        g.p = V::new(-50.0, 0.02, 140.0);
+        g.grounded = false;
+        g.coyote = 0.0;
+        g.v = V::new(30.0, -5.0, 0.0);
+        g.step(1.0 / 120.0, 0.0, 0.0, 0.0, false, false, false);
+        assert!(g.grounded && g.v.x == 30.0 && g.landing_grip == 0.16);
+        let x = g.p.x;
+        run(&mut g, 0.08, 0.0, 0.0);
+        assert!(g.v.x > 12.0 && g.v.x < 30.0 && g.p.x > x + 1.0);
+        run(&mut g, 0.5, 0.0, 0.0);
+        assert_eq!(g.v.x, 0.0);
+        assert!(g.p.x - x < 4.0);
+        let stopped = g.p.x;
+        run(&mut g, 1.0, 0.0, 0.0);
+        assert_eq!(g.p.x, stopped);
     }
     #[test]
     fn snappy_runs_at_24_and_carries_30_without_repeated_dashes_or_jumps() {

@@ -24,6 +24,7 @@ Air jump with movement input redirects momentum; bullet time gives time to aim.
 Seven playgrounds: three tall jump tiers, three wall-run tiers, one combined Expert.
 Snappy cruises at 24 m/s. Dash once for 30 m/s, then keep moving to carry it.
 No repeated dashes, jump tapping, or held sprint button is needed to keep speed.
+Landings have a brief momentum skid as traction returns over 160 milliseconds.
 Jump gaps are 18/21/24 metres, wall lanes 40/56/72 metres, mixed gaps 50 metres.
 Jump routes are checked at 24 and 30 m/s. Select sections in Pause; R restarts.
 Move alongside glowing walls while airborne to wall-run; Jump kicks away.
